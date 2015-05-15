@@ -1,0 +1,28 @@
+<script>
+
+var patch = {};//initialize patch
+
+function updatePatch(e) {
+  patch['prop'] = $('some_element');
+  //...
+}
+
+//...
+
+$('.data').change(function() {
+
+  //...
+  updatePatch();
+
+});
+
+
+function init() {
+  audioComponent.someProperty = patch.prop
+  //...
+
+  audioComponent.connect(anotherAudioComponent);//...
+  //...
+}
+
+</script>
