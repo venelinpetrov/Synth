@@ -6,6 +6,38 @@ window.onload = function () {
 
 
 	var context = new AudioContext();
+	var params = document.getElementsByClassName('parameter');
+	var Patch = (function(){
+		function Patch(){
+			this._patch = {
+				'Osc1_power': 'on',
+				'Osc1_wave': 'square',
+				'Osc1_pitch': 0,
+				'Osc1_gain': .7
+			};
+		}
+		Patch.prototype.setPatch = function(parameter, value) {
+			this._patch[parameter] = value;
+		};
+
+		Patch.prototype.getPatch = function() {
+			return this._patch;
+		};
+
+		return Patch;
+	})();
+
+	var patch = new Patch();
+
+	[].forEach.call(params, function(v){
+		//initialize patch
+		v.value = patch.getPatch()[v.id];
+		v.addEventListener('input', function (e){
+			//v.dispatchEvent(new Event('onmidimessage'));
+			console.log(e.target.id, e.target.value);
+			patch.setPatch(e.target.id, e.target.value)
+		}, false);
+	});
 
   var Voice = (function(context) {
     function Voice(frequency){
@@ -16,26 +48,26 @@ window.onload = function () {
     Voice.prototype.start = function(velocity) {
       /* VCO */
       var vco = context.createOscillator();
-      vco.type = 'sine';
+      vco.type = patch.getPatch()["Osc1_wave"];
       vco.frequency.value = this.frequency;
 
-      var vco2 = context.createOscillator();
-      vco2.type = 'square';
-      vco2.frequency.value = this.frequency;
+      //var vco2 = context.createOscillator();
+      //vco2.type = 'square';
+      //vco2.frequency.value = this.frequency;
 
       /* VCA */
       var vca = context.createGain();
-      vca.gain.value = velocity;
+      vca.gain.value = velocity * patch.getPatch()["Osc1_gain"];
 
       /* connections */
       vco.connect(vca);
-      vco2.connect(vca);
+      //vco2.connect(vca);
       vca.connect(context.destination);
 
       vco.start(0);
-      vco2.start(0);
+      //vco2.start(0);
       this.oscillators.push(vco);
-      this.oscillators.push(vco2);
+      //this.oscillators.push(vco2);
       console.log(this.oscillators);
     };
 
@@ -62,7 +94,8 @@ window.onload = function () {
     }
     console.log(active_voices);
     if(velocity > 0) {
-      var voice = new Voice(equalTempered440[note + 1]);
+			var pitch = +patch.getPatch()['Osc1_pitch'];
+      var voice = new Voice(equalTempered440[note + +pitch]);
       active_voices[note] = voice;
       voice.start(velocity);
     } else {

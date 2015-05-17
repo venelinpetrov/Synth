@@ -109,6 +109,10 @@
       this.ctx = ctx;
     }
 
+    setGain(value) {
+        this._gain.gain.value = value;
+    }
+
     setFreq(value) {
       this._osc.frequency.value = value;
     }
@@ -138,22 +142,21 @@
     }
 
 
-
     render() {
       var slider = HtmlRenderer.renderSlider({
         id: this.id + '_input',
-        labelText: 'freq: ',
+        labelText: 'gain: ',
         className: 'sdf',
-        min:50,
-        max:1000,
-        step:10,
-        value:150,
+        min:0,
+        max:1,
+        step:.1,
+        value:.7,
         advanced: true
       });
-      document.getElementById('Osc1_freq').className = 'parameter';
+      document.getElementById('Osc1_gain').className = 'parameter';
       for(let elem in slider) {
 
-        document.getElementById('Osc1_freq').appendChild(slider[elem]);
+        document.getElementById('Osc1_gain').appendChild(slider[elem]);
       }
       var btn = HtmlRenderer.renderButton(this.id, 'on/off', 'switch');
       btn.addEventListener('click', (function(e) {
@@ -173,38 +176,37 @@
     var ctx = new AudioContext();
     var osc1 = new Oscillator('Osc1', {type: 'sine', frequency: 70, gain: 0}, ctx);
     var patch = new Patch();
-    var components = {};
-    console.log(osc1.getId());
+    //var components = {};
     osc1.render();
     osc1.init();
     osc1.connect(ctx.destination);
     osc1.start();
 
 
-    components[osc1.getId() +'_freq'] = osc1;
+    //components[osc1.getId() +'_gain'] = osc1;
 
     var params = document.getElementsByClassName('parameter');
     //[TODO] use Array.from(arrLikeObj, function(v){}) when it's implemented in babel
     [].forEach.call(params, function(v){
       v.addEventListener('input', (e) => {
-        console.log(e);
 
-        patch.updatePatch([e.target.parentNode.id], e.target.value);
-        components[e.target.parentNode.id] = e.target.value;
-        console.log(patch.getPatch());
-        console.log(components);
-        osc1.setFreq(e.target.value);
+
+        patch.updatePatch(e.target.parentNode.id, e.target.value);
+        //components[e.target.parentNode.id] = e.target.value;
+        console.log('get patch:',patch.getPatch());
+        //console.log(components);
+        osc1.setGain(e.target.value);
       }, false);
     });
-    {
 
-    class Synth {
-      constructor(){
-        this._components = {};
-        var osc;
-      }
 
-    }
+    // class Synth {
+    //   constructor(){
+    //     this._components = {};
+    //     var osc;
+    //   }
+    //
+    // }
 
   }
 })(window.ns || {});
