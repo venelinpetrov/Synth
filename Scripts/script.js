@@ -20,8 +20,6 @@
       slider.value = value;
 
 
-
-
       //advanced slider
       if(advanced) {
         //create html elements
@@ -59,6 +57,7 @@
       return {slider};
     }
 
+
     //Button control
     static renderButton(id, text, className) {
       var elem = document.getElementById(id);
@@ -70,8 +69,9 @@
       return input;
     }
 
-    //Select control
-    //TODO
+
+    //TODO: Select control
+
   }
 
   class Patch {
@@ -197,7 +197,7 @@
       }, false);
     });
     {
-    
+
     class Synth {
       constructor(){
         this._components = {};
