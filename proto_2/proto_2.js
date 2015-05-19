@@ -16,12 +16,12 @@ window.onload = function () {
 				'Osc1_gain': .7
 			};
 		}
-		Patch.prototype.setPatch = function(parameter, value) {
+		Patch.prototype.setParameter = function(parameter, value) {
 			this._patch[parameter] = value;
 		};
 
-		Patch.prototype.getPatch = function() {
-			return this._patch;
+		Patch.prototype.getParameter = function(parameter) {
+			return this._patch[parameter];
 		};
 
 		return Patch;
@@ -31,11 +31,11 @@ window.onload = function () {
 
 	[].forEach.call(params, function(v){
 		//initialize patch
-		v.value = patch.getPatch()[v.id];
+		v.value = patch.getParameter(v.id);
 		v.addEventListener('input', function (e){
 			//v.dispatchEvent(new Event('onmidimessage'));
 			console.log(e.target.id, e.target.value);
-			patch.setPatch(e.target.id, e.target.value)
+			patch.setParameter(e.target.id, e.target.value)
 		}, false);
 	});
 
@@ -48,7 +48,7 @@ window.onload = function () {
     Voice.prototype.start = function(velocity) {
       /* VCO */
       var vco = context.createOscillator();
-      vco.type = patch.getPatch()["Osc1_wave"];
+      vco.type = patch.getParameter("Osc1_wave");
       vco.frequency.value = this.frequency;
 
       //var vco2 = context.createOscillator();
@@ -57,7 +57,7 @@ window.onload = function () {
 
       /* VCA */
       var vca = context.createGain();
-      vca.gain.value = velocity * patch.getPatch()["Osc1_gain"];
+      vca.gain.value = velocity * patch.getParameter("Osc1_gain");
 
       /* connections */
       vco.connect(vca);
@@ -94,7 +94,7 @@ window.onload = function () {
     }
     console.log(active_voices);
     if(velocity > 0) {
-			var pitch = +patch.getPatch()['Osc1_pitch'];
+			var pitch = +patch.getParameter('Osc1_pitch');
       var voice = new Voice(equalTempered440[note + +pitch]);
       active_voices[note] = voice;
       voice.start(velocity);
