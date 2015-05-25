@@ -58,6 +58,7 @@ window.onload = function () {
       /* VCA */
       var vca = context.createGain();
       vca.gain.value = velocity * patch.getParameter("Osc1_gain");
+			vca.gain.setTargetAtTime(0, context.currentTime, .5);
 
       /* connections */
       vco.connect(vca);
@@ -73,7 +74,7 @@ window.onload = function () {
 
     Voice.prototype.stop = function() {
       this.oscillators.forEach(function(oscillator) {
-        oscillator.stop();
+        oscillator.stop(context.currentTime + 3); //TODO: when implementing the real envelope module this 3 should be the releaseTime + some_tolerance
       });
     };
 
