@@ -96,7 +96,7 @@ window.onload = function () {
     console.log(active_voices);
     if(velocity > 0) {
 			var pitch = +patch.getParameter('Osc1_pitch');
-      var voice = new Voice(equalTempered440[note + +pitch]);
+      var voice = new Voice(equalTempered440[note + pitch]);
       active_voices[note] = voice;
       voice.start(velocity);
     } else {
