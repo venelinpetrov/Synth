@@ -8,27 +8,11 @@
 
 
 <body>
-	<fieldset id="Osc1" style="display: inline-block;">
-    <legend>Osc1</legend>
 
-    <input id="Osc1_power" class="power"  type="checkbox">
-    <br>
-		<label for="Osc1_gain">pitch: </label>
-    <input id="Osc1_pitch" class="parameter" type="number" min="-64" max="64" value="0">
-    <select id="Osc1_wave" class="parameter">
-      <option>sine</option>
-      <option>square</option>
-      <option>triangle</option>
-      <option>sawtooth</option>
-    </select>
-    <br>
-    <label for="Osc1_gain">Amp:</label>
-    <input id="Osc1_gain" class="parameter" type="range" min="0" max="1" step=".1" value=".7">
-	</fieldset>
 
 	<fieldset>
 		<legend>Osc2</legend>
-		<x-osc id="Osc2"></x-osc>
+		<x-osc id="Osc1"></x-osc>
 	</fieldset>
 
 </body>
