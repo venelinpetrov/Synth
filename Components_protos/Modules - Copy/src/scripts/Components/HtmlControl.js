@@ -69,7 +69,7 @@ class HtmlControl {
     return {select, label};
   }
 
-  static createNumericTextBox({id, labelText, min = 0, max = 1, value = 1} = {}) {
+  static createNumericTextBox({id, labelText, min = 0, max = 1, step=1, value = 1} = {}) {
     var input = document.createElement('input');
     var label = document.createElement('label');
     input.id = id;
@@ -77,6 +77,7 @@ class HtmlControl {
     input.setAttribute('type', 'number');
     input.min = min;
     input.max = max;
+    input.step = step;
     input.value = value;
     label.setAttribute('for', id);
     label.textContent = labelText;

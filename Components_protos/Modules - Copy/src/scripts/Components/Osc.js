@@ -36,7 +36,7 @@ class Oscillator {
     return this.vco.detune.value;
   }
   setPitch(value) {
-    this.vco.detune.value = value;
+    this.vco.detune.value = value  * 100; //detune is in cents (100cent = 1 semi-tone), but values come fractional, so multiply by 100
   }
 
   //get/set frequency

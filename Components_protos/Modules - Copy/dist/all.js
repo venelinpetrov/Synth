@@ -4,6 +4,10 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+var Filter = function Filter() {
+  _classCallCheck(this, Filter);
+};
+
 var HtmlControl = (function () {
   function HtmlControl() {
     _classCallCheck(this, HtmlControl);
@@ -108,6 +112,8 @@ var HtmlControl = (function () {
       var min = _ref3$min === undefined ? 0 : _ref3$min;
       var _ref3$max = _ref3.max;
       var max = _ref3$max === undefined ? 1 : _ref3$max;
+      var _ref3$step = _ref3.step;
+      var step = _ref3$step === undefined ? 1 : _ref3$step;
       var _ref3$value = _ref3.value;
       var value = _ref3$value === undefined ? 1 : _ref3$value;
 
@@ -118,6 +124,7 @@ var HtmlControl = (function () {
       input.setAttribute('type', 'number');
       input.min = min;
       input.max = max;
+      input.step = step;
       input.value = value;
       label.setAttribute('for', id);
       label.textContent = labelText;
@@ -204,7 +211,7 @@ var Oscillator = (function () {
   }, {
     key: 'setPitch',
     value: function setPitch(value) {
-      this.vco.detune.value = value;
+      this.vco.detune.value = value * 100; //detune is in cents (100cent = 1 semi-tone), but values come fractional, so multiply by 100
     }
   }, {
     key: 'getFrequency',
@@ -251,7 +258,7 @@ var Patch = (function () {
     _classCallCheck(this, Patch);
 
     this._patch = {
-      'Osc1_power': 'on',
+      'Osc1_on': true,
       'Osc1_wave': 'square',
       'Osc1_pitch': 0,
       'Osc1_gain': 0.8
@@ -285,14 +292,18 @@ var Voice = (function () {
   _createClass(Voice, [{
     key: 'start',
     value: function start(velocity) {
-      var vco1 = new Oscillator(this.ctx);
-      vco1.setType(patch.getParameter('Osc1_wave'));
-      vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
-      var pitch = +patch.getParameter('Osc1_pitch');
-      vco1.setFrequency(equalTempered440[this.note + pitch]);
-      //console.log(this.frequency)
-      vco1.start();
-      this.oscillators.push(vco1);
+      var vco1;
+      if (patch.getParameter('Osc1_on') == true) {
+        vco1 = new Oscillator(this.ctx);
+        vco1.setType(patch.getParameter('Osc1_wave'));
+        vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
+        var pitch = +patch.getParameter('Osc1_pitch');
+        vco1.setFrequency(equalTempered440[this.note]); //sdfsdf
+        vco1.setPitch(pitch);
+        vco1.start();
+        this.oscillators.push(vco1);
+      }
+      console.log(this.oscillators);
     }
   }, {
     key: 'stop',
@@ -361,13 +372,24 @@ window.onload = function () {
 //Initialize patch function
 function initPatch() {
   var params = document.getElementsByClassName('parameter');
+  var powers = document.getElementsByClassName('power');
+  //extract values from 'parameter'-s and attach event listener to each
   [].forEach.call(params, function (v) {
-
-    v.value = patch.getParameter(v.id);
+    v.value = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('input', function (e) {
       //v.dispatchEvent(new Event('onmidimessage'));
       console.log(e.target.id, e.target.value);
       patch.setParameter(e.target.id, e.target.value);
+    }, false);
+  });
+
+  //extract values from on/off buttons
+  [].forEach.call(powers, function (v) {
+    v.checked = patch.getParameter(v.id); //init value with default patch
+    v.addEventListener('change', function (e) {
+      //v.dispatchEvent(new Event('onmidimessage'));
+      console.log(e.target.id, e.target.checked);
+      patch.setParameter(e.target.id, e.target.checked);
     }, false);
   });
 }
@@ -399,11 +421,11 @@ function initSynth() {
       labelText: 'Pitch: ',
       min: -64,
       max: 64,
+      step: 0.01,
       value: 0
     });
-
     var powerControl = HtmlControl.createCheckBox({
-      id: this.id + '_power',
+      id: this.id + '_on',
       labelText: 'On/Off: ',
       className: 'power'
     });

@@ -54,15 +54,25 @@
   //Initialize patch function
   function initPatch() {
     var params = document.getElementsByClassName('parameter');
+    var powers = document.getElementsByClassName('power');
+    //extract values from 'parameter'-s and attach event listener to each
     [].forEach.call(params, function(v){
-
-
-      v.value = patch.getParameter(v.id);
+      v.value = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('input', function (e){
         //v.dispatchEvent(new Event('onmidimessage'));
         console.log(e.target.id, e.target.value);
         patch.setParameter(e.target.id, e.target.value);
 
+      }, false);
+    });
+
+    //extract values from on/off buttons
+    [].forEach.call(powers, function(v){
+      v.checked = patch.getParameter(v.id); //init value with default patch
+      v.addEventListener('change', function (e){
+        //v.dispatchEvent(new Event('onmidimessage'));
+        console.log(e.target.id, e.target.checked);
+        patch.setParameter(e.target.id, e.target.checked);
       }, false);
     });
   }
@@ -94,11 +104,11 @@
           labelText: 'Pitch: ',
           min: -64,
           max: 64,
+          step: .01,
           value: 0
       });
-
       var powerControl = HtmlControl.createCheckBox({
-        id: this.id + '_power',
+        id: this.id + '_on',
         labelText: 'On/Off: ',
         className: 'power'
       });
