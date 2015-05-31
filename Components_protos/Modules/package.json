@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "babelify": "^6.1.2",
+    "gulp": "^3.8.11",
+    "gulp-babel": "^5.1.0",
+    "gulp-browserify": "^0.5.1",
+    "gulp-concat": "^2.5.2"
+  }
+}
