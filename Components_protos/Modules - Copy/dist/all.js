@@ -5,15 +5,15 @@
 
     - lowpass (12dB/octave)  ---\
       @ frequency - the cutoff frequency [HZ]
-      @ Q - the resonance [dB]
+      @ Q - the resonance [0 to 12] [dB]
 
     - highpass (12dB/octave)  /---
       @ frequency - the cutoff frequency [HZ]
-      @ Q - the resonance [dB]
+      @ Q - the resonance [0 to 12] [dB]
 
     - bandpass (12dB/octave each side)  __/--\__
       @ frequency - the center frequency [HZ]
-      @ Q - Controls the width of the band. The width becomes narrower as the Q value increases [.2 to 30]
+      @ Q - controls the width of the band. The width becomes narrower as the Q value increases [.2 to 30]
 
     - lowshelf  --\__
       @ frequnecy - the upper limit of the frequences where the boost (or attenuation) is applied. [Hz]
@@ -25,11 +25,12 @@
 
     - peaking  __/\__
       @ frequency - the center frequency of where the boost is applied [Hz]
-      @ Q - Controls the width of the band of frequencies that are boosted. A large value implies a narrow width [0.0001 to 1000]
+      @ Q - controls the width of the band of frequencies that are boosted. A large value implies a narrow width [.2 to 30]
       @ gain - the boost (+/-) [dB]
 
     - notch  --\/--
       @ frequency - the center frequency of where the notch is applied
+      @ Q - controls the width of the band of frequencies that are attenuated. A large value implies a narrow width [.2 to 30]
 
 */
 'use strict';
@@ -38,9 +39,98 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var Filter = function Filter() {
-  _classCallCheck(this, Filter);
-};
+var Filter = (function () {
+  function Filter(ctx) {
+    _classCallCheck(this, Filter);
+
+    this.ctx = ctx;
+
+    //create filter node
+    this.vcf = ctx.createBiquadFilter();
+    this.vcf.frequency.value = 900;
+    //this.vcf.Q.value = 2;
+    this.vcf.type = 'lowpass';
+    //dry/wet gains
+    this.dryGain = this.ctx.createGain();this.dryGain.gain.value = 0;
+    this.wetGain = this.ctx.createGain();this.wetGain.gain.value = 0.5;
+
+    //filter component input and output
+    this.inputNode = this.ctx.createGain();
+    this.outputNode = this.ctx.createGain();
+
+    //connections
+    //input --> vcf --> wet --> output-(free out)
+    this.inputNode.connect(this.vcf);
+    this.vcf.connect(this.wetGain);
+    this.wetGain.connect(this.outputNode);
+
+    //input --> dry --> output-(free out)
+    this.inputNode.connect(this.dryGain);
+    this.dryGain.connect(this.outputNode);
+  }
+
+  _createClass(Filter, [{
+    key: 'input',
+    get: function () {
+      return this.inputNode;
+    }
+  }, {
+    key: 'connect',
+    value: function connect(node) {
+      this.outputNode.connect(node);
+    }
+  }, {
+    key: 'getType',
+
+    //get/set type
+    value: function getType() {
+      return this.vcf.type;
+    }
+  }, {
+    key: 'setType',
+    value: function setType(value) {
+      this.vcf.type = value;
+    }
+  }, {
+    key: 'getFrequency',
+
+    //get/set frequency
+    value: function getFrequency() {
+      return this.vcf.frequency.value;
+    }
+  }, {
+    key: 'setFrequency',
+    value: function setFrequency(value) {
+      this.vcf.frequency.value = value;
+    }
+  }, {
+    key: 'getGain',
+
+    //get/set gain
+    value: function getGain() {
+      return this.vcf.gain.value;
+    }
+  }, {
+    key: 'setGain',
+    value: function setGain(value) {
+      this.vcf.gain.value = value;
+    }
+  }, {
+    key: 'getQ',
+
+    //get/set Q
+    value: function getQ() {
+      return thid.vcf.Q.value;
+    }
+  }, {
+    key: 'setQ',
+    value: function setQ(value) {
+      thid.vcf.Q.value = value;
+    }
+  }]);
+
+  return Filter;
+})();
 
 var HtmlControl = (function () {
   function HtmlControl() {
@@ -195,9 +285,6 @@ var Oscillator = (function () {
   function Oscillator(ctx) {
     _classCallCheck(this, Oscillator);
 
-    this.wave = 'sine';
-    this.gain = 1;
-    this.pitch = 0;
     this.ctx = ctx;
     //create VCO (voltage controlled oscillator)
     this.vco = this.ctx.createOscillator();
@@ -207,7 +294,7 @@ var Oscillator = (function () {
 
     //vco->vca->destination
     this.vco.connect(this.vca);
-    this.vca.connect(this.ctx.destination);
+    //this.vca.connect(this.ctx.destination);
   }
 
   _createClass(Oscillator, [{
@@ -219,8 +306,8 @@ var Oscillator = (function () {
     }
   }, {
     key: 'setType',
-    value: function setType(wave) {
-      this.vco.type = wave;
+    value: function setType(value) {
+      this.vco.type = value;
     }
   }, {
     key: 'getGain',
@@ -300,7 +387,13 @@ var Patch = (function () {
       'Osc2_on': false,
       'Osc2_wave': 'sine',
       'Osc2_pitch': 0,
-      'Osc2_gain': 0.5
+      'Osc2_gain': 0.5,
+
+      'Filter1_on': false,
+      'Filter1_type': 'lowpass',
+      'Filter1_frequency': 600,
+      'Filter1_Q': 1,
+      'Filter1_gain': 0
     };
   }
 
@@ -313,6 +406,19 @@ var Patch = (function () {
     key: 'getParameter',
     value: function getParameter(parameter) {
       return this._patch[parameter];
+    }
+  }, {
+    key: 'getPatch',
+
+    //get/set patch
+    //TODO: implement patch import/export
+    value: function getPatch() {
+      return this._patch;
+    }
+  }, {
+    key: 'setPatch',
+    value: function setPatch(patch) {
+      this._patch = patch;
     }
   }]);
 
@@ -331,9 +437,12 @@ var Voice = (function () {
   _createClass(Voice, [{
     key: 'start',
     value: function start(velocity) {
-      var vco1, vco2;
+      var vco1, vco2, vcf1;
       if (patch.getParameter('Osc1_on') == true) {
         vco1 = new Oscillator(this.ctx);
+        vcf1 = new Filter(this.ctx);
+        vco1.connect(vcf1.input);
+        vcf1.connect(this.ctx.destination);
         vco1.setType(patch.getParameter('Osc1_wave'));
         vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
         vco1.setFrequency(equalTempered440[this.note]); //sdfsdf
@@ -425,9 +534,8 @@ function initPatch() {
   [].forEach.call(params, function (v) {
     v.value = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('input', function (e) {
-      //v.dispatchEvent(new Event('onmidimessage'));
-      console.log(e.target.id, e.target.value);
       patch.setParameter(e.target.id, e.target.value);
+      console.log(patch);
     }, false);
   });
 
@@ -435,18 +543,25 @@ function initPatch() {
   [].forEach.call(powers, function (v) {
     v.checked = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('change', function (e) {
-      //v.dispatchEvent(new Event('onmidimessage'));
-      console.log(e.target.id, e.target.checked);
       patch.setParameter(e.target.id, e.target.checked);
+      console.log(patch);
     }, false);
   });
 }
 
 //Initialize synth function
 function initSynth() {
-  var oscProto = Object.create(HTMLElement.prototype);
+  var oscProto;
+  var filterProto;
 
+  //Oscillator html rendering
+  oscProto = Object.create(HTMLElement.prototype);
   oscProto.createdCallback = function () {
+    var powerControl = HtmlControl.createCheckBox({
+      id: this.id + '_on',
+      labelText: 'On/Off: ',
+      className: 'power'
+    });
     var gainControl = HtmlControl.createSlider({
       id: this.id + '_gain',
       advanced: true,
@@ -472,21 +587,10 @@ function initSynth() {
       step: 0.01,
       value: 0
     });
-    var powerControl = HtmlControl.createCheckBox({
-      id: this.id + '_on',
-      labelText: 'On/Off: ',
-      className: 'power'
-    });
 
-    //on/off
+    //on/off control
     this.appendChild(powerControl.label);
     this.appendChild(powerControl.input);
-
-    //gain control
-    gainControl.label.setAttribute('for', this.id + '_gain');
-    this.appendChild(gainControl.label);
-    this.appendChild(gainControl.slider);
-    this.appendChild(gainControl.valueIndicator);
 
     //wave type control
     this.appendChild(waveTypeControl.label);
@@ -495,7 +599,124 @@ function initSynth() {
     //pitch control
     this.appendChild(pitchControl.label);
     this.appendChild(pitchControl.input);
+
+    //gain control
+    gainControl.label.setAttribute('for', this.id + '_gain');
+    this.appendChild(gainControl.label);
+    this.appendChild(gainControl.slider);
+    this.appendChild(gainControl.valueIndicator);
+
+    console.log('Oscillator created');
   };
   document.registerElement('x-osc', { prototype: oscProto });
+
+  //Filter html rendering
+  filterProto = Object.create(HTMLElement.prototype);
+  filterProto.createdCallback = function () {
+    var powerControl = HtmlControl.createCheckBox({
+      id: this.id + '_on',
+      labelText: 'On/Off: ',
+      className: 'power'
+    });
+    var filterTypeControl = HtmlControl.createSelect({
+      id: this.id + '_type',
+      labelText: 'Filter Type: ',
+      options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'peaking', 'notch']
+    });
+
+    var frequencyControl = HtmlControl.createSlider({
+      id: this.id + '_frequency',
+      labelText: 'Frequency',
+      min: 20,
+      max: 20000,
+      step: 10,
+      value: patch.getParameter(this.id + '_frequency'),
+      advanced: true
+    });
+
+    var QControl = HtmlControl.createSlider({
+      id: this.id + '_Q',
+      labelText: 'Q',
+      min: 0,
+      max: 12,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_Q'),
+      advanced: true
+    });
+
+    var gainControl = HtmlControl.createSlider({
+      id: this.id + '_gain',
+      labelText: 'Gain',
+      min: -40,
+      max: 40,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_gain'),
+      advanced: true
+    });
+
+    var type = patch.getParameter(this.id + '_type');
+
+    //on/off
+    this.appendChild(powerControl.label);
+    this.appendChild(powerControl.input);
+
+    //filter type control
+    this.appendChild(filterTypeControl.label);
+    this.appendChild(filterTypeControl.select);
+    filterTypeControl.select.addEventListener('change', function (e) {
+      var option = e.currentTarget.value;
+
+      //show/hide gain control, since it is not available for all types of filters
+      if (option == 'lowpass' || option == 'highpass' || option == 'bandpass' || option == 'notch') {
+        //hide gain control
+        gainControl.label.style.display = 'none';
+        gainControl.slider.style.display = 'none';
+        gainControl.valueIndicator.style.display = 'none';
+
+        QControl.label.style.display = '';
+        QControl.slider.style.display = '';
+        QControl.valueIndicator.style.display = '';
+      } else {
+        //show gain control
+        gainControl.label.style.display = '';
+        gainControl.slider.style.display = '';
+        gainControl.valueIndicator.style.display = '';
+
+        if (option != 'peaking') {
+          QControl.label.style.display = 'none';
+          QControl.slider.style.display = 'none';
+          QControl.valueIndicator.style.display = 'none';
+        }
+      }
+    });
+    //frequency control
+    this.appendChild(frequencyControl.label);
+    this.appendChild(frequencyControl.slider);
+    this.appendChild(frequencyControl.valueIndicator);
+
+    //Q control
+    this.appendChild(QControl.label);
+    this.appendChild(QControl.slider);
+    this.appendChild(QControl.valueIndicator);
+
+    //gain control
+    this.appendChild(gainControl.label);
+    this.appendChild(gainControl.slider);
+    this.appendChild(gainControl.valueIndicator);
+    if (type == 'lowpass' || type == 'highpass' || type == 'bandpass' || type == 'notch') {
+      gainControl.label.style.display = 'none';
+      gainControl.slider.style.display = 'none';
+      gainControl.valueIndicator.style.display = 'none';
+    } else {
+      if (type != 'peaking') {
+        QControl.label.style.display = 'none';
+        QControl.slider.style.display = 'none';
+        QControl.valueIndicator.style.display = 'none';
+      }
+    }
+
+    console.log('Filter created');
+  };
+  document.registerElement('x-filter', { prototype: filterProto });
 }
 //# sourceMappingURL=all.js.map

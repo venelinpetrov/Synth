@@ -6,9 +6,12 @@ class Voice {
   }
 
   start(velocity) {
-    var vco1, vco2;
+    var vco1, vco2, vcf1;
     if(patch.getParameter('Osc1_on') == true) {
       vco1 = new Oscillator(this.ctx);
+      vcf1 = new Filter(this.ctx);
+      vco1.connect(vcf1.input);
+      vcf1.connect(this.ctx.destination);
       vco1.setType(patch.getParameter('Osc1_wave'));
       vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
       vco1.setFrequency(equalTempered440[this.note]);//sdfsdf

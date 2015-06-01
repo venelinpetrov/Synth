@@ -59,10 +59,8 @@
     [].forEach.call(params, function(v){
       v.value = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('input', function (e){
-        //v.dispatchEvent(new Event('onmidimessage'));
-        console.log(e.target.id, e.target.value);
         patch.setParameter(e.target.id, e.target.value);
-
+        console.log(patch);
       }, false);
     });
 
@@ -70,18 +68,25 @@
     [].forEach.call(powers, function(v){
       v.checked = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('change', function (e){
-        //v.dispatchEvent(new Event('onmidimessage'));
-        console.log(e.target.id, e.target.checked);
         patch.setParameter(e.target.id, e.target.checked);
+        console.log(patch);
       }, false);
     });
   }
 
   //Initialize synth function
   function initSynth() {
-    var oscProto = Object.create(HTMLElement.prototype);
+    var oscProto;
+    var filterProto;
 
+    //Oscillator html rendering
+    oscProto = Object.create(HTMLElement.prototype);
     oscProto.createdCallback = function() {
+      var powerControl = HtmlControl.createCheckBox({
+        id: this.id + '_on',
+        labelText: 'On/Off: ',
+        className: 'power'
+      });
       var gainControl = HtmlControl.createSlider({
         id: this.id + '_gain',
         advanced: true,
@@ -107,21 +112,10 @@
           step: .01,
           value: 0
       });
-      var powerControl = HtmlControl.createCheckBox({
-        id: this.id + '_on',
-        labelText: 'On/Off: ',
-        className: 'power'
-      });
 
-      //on/off
+      //on/off control
       this.appendChild(powerControl.label);
       this.appendChild(powerControl.input);
-
-      //gain control
-      gainControl.label.setAttribute('for', this.id + '_gain');
-      this.appendChild(gainControl.label);
-      this.appendChild(gainControl.slider);
-      this.appendChild(gainControl.valueIndicator);
 
       //wave type control
       this.appendChild(waveTypeControl.label);
@@ -129,7 +123,130 @@
 
       //pitch control
       this.appendChild(pitchControl.label);
-      this.appendChild(pitchControl.input)
+      this.appendChild(pitchControl.input);
+
+      //gain control
+      gainControl.label.setAttribute('for', this.id + '_gain');
+      this.appendChild(gainControl.label);
+      this.appendChild(gainControl.slider);
+      this.appendChild(gainControl.valueIndicator);
+
+      console.log('Oscillator created');
     };
     document.registerElement('x-osc', {prototype: oscProto});
+
+    //Filter html rendering
+    filterProto = Object.create(HTMLElement.prototype);
+    filterProto.createdCallback = function() {
+      var powerControl = HtmlControl.createCheckBox({
+        id: this.id + '_on',
+        labelText: 'On/Off: ',
+        className: 'power'
+      });
+      var filterTypeControl = HtmlControl.createSelect({
+        id: this.id + '_type',
+        labelText: 'Filter Type: ',
+        options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'peaking', 'notch']
+      });
+
+      var frequencyControl = HtmlControl.createSlider({
+        id: this.id + '_frequency',
+        labelText: 'Frequency',
+        min: 20,
+        max: 20000,
+        step: 10,
+        value: patch.getParameter(this.id + '_frequency'),
+        advanced: true
+      });
+
+      var QControl = HtmlControl.createSlider({
+        id: this.id + '_Q',
+        labelText: 'Q',
+        min: 0,
+        max: 12,
+        step: .1,
+        value: patch.getParameter(this.id + '_Q'),
+        advanced: true
+      });
+
+      var gainControl = HtmlControl.createSlider({
+        id: this.id + '_gain',
+        labelText: 'Gain',
+        min: -40,
+        max: 40,
+        step: .1,
+        value: patch.getParameter(this.id + '_gain'),
+        advanced: true
+      });
+
+      var type = patch.getParameter(this.id + '_type');
+
+      //on/off
+      this.appendChild(powerControl.label);
+      this.appendChild(powerControl.input);
+
+      //filter type control
+      this.appendChild(filterTypeControl.label);
+      this.appendChild(filterTypeControl.select);
+      filterTypeControl.select.addEventListener('change', e => {
+        var option = e.currentTarget.value;
+
+        //show/hide gain control, since it is not available for all types of filters
+        if(option == 'lowpass' ||
+            option == 'highpass' ||
+            option == 'bandpass' ||
+            option == 'notch') {
+          //hide gain control
+          gainControl.label.style.display = 'none';
+          gainControl.slider.style.display = 'none';
+          gainControl.valueIndicator.style.display = 'none';
+
+          QControl.label.style.display = '';
+          QControl.slider.style.display = '';
+          QControl.valueIndicator.style.display = '';
+        } else {
+          //show gain control
+          gainControl.label.style.display = '';
+          gainControl.slider.style.display = '';
+          gainControl.valueIndicator.style.display = '';
+
+          if(option != 'peaking') {
+            QControl.label.style.display = 'none';
+            QControl.slider.style.display = 'none';
+            QControl.valueIndicator.style.display = 'none';
+          }
+        }
+      });
+      //frequency control
+      this.appendChild(frequencyControl.label);
+      this.appendChild(frequencyControl.slider);
+      this.appendChild(frequencyControl.valueIndicator);
+
+      //Q control
+      this.appendChild(QControl.label);
+      this.appendChild(QControl.slider);
+      this.appendChild(QControl.valueIndicator);
+
+      //gain control
+      this.appendChild(gainControl.label);
+      this.appendChild(gainControl.slider);
+      this.appendChild(gainControl.valueIndicator);
+      if(type == 'lowpass' ||
+          type == 'highpass' ||
+          type == 'bandpass' ||
+          type == 'notch') {
+        gainControl.label.style.display = 'none';
+        gainControl.slider.style.display = 'none';
+        gainControl.valueIndicator.style.display = 'none';
+      } else {
+        if(type != 'peaking') {
+          QControl.label.style.display = 'none';
+          QControl.slider.style.display = 'none';
+          QControl.valueIndicator.style.display = 'none';
+        }
+      }
+
+      console.log('Filter created');
+    };
+    document.registerElement('x-filter', {prototype: filterProto});
   }

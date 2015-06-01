@@ -1,8 +1,6 @@
 class Oscillator {
   constructor(ctx) {
-    this.wave = 'sine';
-    this.gain = 1;
-    this.pitch = 0;
+
     this.ctx = ctx;
     //create VCO (voltage controlled oscillator)
     this.vco = this.ctx.createOscillator();
@@ -12,14 +10,14 @@ class Oscillator {
 
     //vco->vca->destination
     this.vco.connect(this.vca);
-    this.vca.connect(this.ctx.destination);
+    //this.vca.connect(this.ctx.destination);
   }
   //get/set wave type
   getType() {
     return this.vco.type;
   }
-  setType(wave) {
-    this.vco.type = wave;
+  setType(value) {
+    this.vco.type = value;
   }
 
   //get/set gain
