@@ -5,13 +5,42 @@
 	<title>osc</title>
 	<script src="dist/all.js"></script>
 </head>
-
 <body>
-
-	<fieldset class="class=fc fc--1">
-		<legend>Osc2</legend>
+	<fieldset>
+		<legend>Osc1</legend>
 		<x-osc id="Osc1"></x-osc>
 	</fieldset>
 
+
+	<fieldset>
+		<legend>Osc2</legend>
+		<x-osc id="Osc2"></x-osc>
+	</fieldset>
+
+	<fieldset>
+		<legend>Filter 1</legend>
+
+		<div id="Filter1">
+			<!-- Type -->
+			<select id="Filter1_type">
+				<option value="lowpass">lowpass</option>
+				<option value="highpass">highpass</option>
+				<option value="bandpass">bandpass</option>
+				<option value="lowshelf">lowshelf</option>
+				<option value="highshelf">highshelf</option>
+				<option value="peaking">peaking</option>
+				<option value="notch">notch</option>
+			</select>
+			<!-- Frequency -->
+			<label for="Filter1_frequency">Frequency</label>
+			<input id="Filter1_frequency" type="number" min="20" max="22000" step="1" value="100">
+			<!-- Q -->
+			<label for="Filter1_q">Q</label>
+			<input id="Filter1_q" type="number" min="0.0001" max="1000" step="1" value="1">
+			<!-- Gain -->
+			<label for="Filter1_gain">Gain</label>
+			<input id="Filter1_gain" type="number" min="-40" max="40" step="1" value="1">
+		</div>
+	</fieldset>
 </body>
 </html>

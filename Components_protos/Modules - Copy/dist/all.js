@@ -1,3 +1,37 @@
+/**
+  Filter class
+
+  Filter types
+
+    - lowpass (12dB/octave)  ---\
+      @ frequency - the cutoff frequency [HZ]
+      @ Q - the resonance [dB]
+
+    - highpass (12dB/octave)  /---
+      @ frequency - the cutoff frequency [HZ]
+      @ Q - the resonance [dB]
+
+    - bandpass (12dB/octave each side)  __/--\__
+      @ frequency - the center frequency [HZ]
+      @ Q - Controls the width of the band. The width becomes narrower as the Q value increases [.2 to 30]
+
+    - lowshelf  --\__
+      @ frequnecy - the upper limit of the frequences where the boost (or attenuation) is applied. [Hz]
+      @ gain - the boost (+/-) [dB]
+
+    - highshelf  __/--
+      @ frequnecy - the lower limit of the frequences where the boost (or attenuation) is applied. [Hz]
+      @ gain - the boost (+/-) [dB]
+
+    - peaking  __/\__
+      @ frequency - the center frequency of where the boost is applied [Hz]
+      @ Q - Controls the width of the band of frequencies that are boosted. A large value implies a narrow width [0.0001 to 1000]
+      @ gain - the boost (+/-) [dB]
+
+    - notch  --\/--
+      @ frequency - the center frequency of where the notch is applied
+
+*/
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -261,7 +295,12 @@ var Patch = (function () {
       'Osc1_on': true,
       'Osc1_wave': 'square',
       'Osc1_pitch': 0,
-      'Osc1_gain': 0.8
+      'Osc1_gain': 0.8,
+
+      'Osc2_on': false,
+      'Osc2_wave': 'sine',
+      'Osc2_pitch': 0,
+      'Osc2_gain': 0.5
     };
   }
 
@@ -292,16 +331,25 @@ var Voice = (function () {
   _createClass(Voice, [{
     key: 'start',
     value: function start(velocity) {
-      var vco1;
+      var vco1, vco2;
       if (patch.getParameter('Osc1_on') == true) {
         vco1 = new Oscillator(this.ctx);
         vco1.setType(patch.getParameter('Osc1_wave'));
         vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
-        var pitch = +patch.getParameter('Osc1_pitch');
         vco1.setFrequency(equalTempered440[this.note]); //sdfsdf
-        vco1.setPitch(pitch);
+        vco1.setPitch(+patch.getParameter('Osc1_pitch'));
         vco1.start();
         this.oscillators.push(vco1);
+      }
+
+      if (patch.getParameter('Osc2_on') == true) {
+        vco2 = new Oscillator(this.ctx);
+        vco2.setType(patch.getParameter('Osc2_wave'));
+        vco2.setGain(patch.getParameter('Osc2_gain') * velocity);
+        vco2.setFrequency(equalTempered440[this.note]); //sdfsdf
+        vco2.setPitch(+patch.getParameter('Osc2_pitch'));
+        vco2.start();
+        this.oscillators.push(vco2);
       }
       console.log(this.oscillators);
     }
