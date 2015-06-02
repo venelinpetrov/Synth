@@ -2,7 +2,8 @@
 
 <html>
 <head>
-	<title>osc</title>
+	<title>SYNTH!</title>
+
 	<script src="dist/all.js"></script>
 </head>
 <body>
@@ -16,38 +17,16 @@
 		<legend>Osc2</legend>
 		<x-osc id="Osc2"></x-osc>
 	</fieldset>
+
+
 	<fieldset>
 		<legend>Filter 1</legend>
 		<x-filter id="Filter1"></x-filter>
 	</fieldset>
+
 	<fieldset>
 		<legend>Filter 2</legend>
-
-		<div id="Filter2">
-			<!-- Power -->
-			<label for="Filter2_on">Bypass</label>
-			<input id="Filter2_on" type="checkbox" class="power">
-			<!-- Type -->
-			<select id="Filter2_type">
-				<option value="lowpass">lowpass</option>
-				<option value="highpass">highpass</option>
-				<option value="bandpass">bandpass</option>
-				<option value="lowshelf">lowshelf</option>
-				<option value="highshelf">highshelf</option>
-				<option value="peaking">peaking</option>
-				<option value="notch">notch</option>
-			</select>
-			<!-- Frequency -->
-			<label for="Filter2_frequency">Frequency</label>
-			<input id="Filter2_frequency" type="number" min="20" max="22000" step="1" value="100">
-			<!-- Q -->
-			<label for="Filter2_q">Q</label>
-			<input id="Filter2_q" type="number" min="0.0001" max="1000" step="1" value="1">
-			<!-- Gain -->
-			<label for="Filter2_gain">Gain</label>
-			<input id="Filter2_gain" type="number" min="-40" max="40" step="1" value="1">
-		</div>
+		<x-filter id="Filter2"></x-filter>
 	</fieldset>
-
 </body>
 </html>

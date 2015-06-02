@@ -10,7 +10,14 @@ class Oscillator {
 
     //vco->vca->destination
     this.vco.connect(this.vca);
-    //this.vca.connect(this.ctx.destination);
+
+    //f1/f2 crossfader gains
+    this.f1Gain = this.ctx.createGain();
+    this.f2Gain = this.ctx.createGain();
+
+    //connect vca to f1Gain and f2Gain
+    this.vca.connect(this.f1Gain);
+    this.vca.connect(this.f2Gain);
   }
   //get/set wave type
   getType() {
@@ -45,10 +52,26 @@ class Oscillator {
     this.vco.frequency.value = value;
   }
 
-  //connect vca->external_node
-  connect(node) {
-    this.vca.connect(node);
+  //set crossfader value
+  //value=1 means all the output goes to filter1
+  setFilterCrossfader(value) {
+    this.f1Gain.gain.value = value;
+    this.f2Gain.gain.value = 1 - value;
   }
+
+  //getters for oscillator outputs
+  get out1() {
+    return this.f1Gain;
+  }
+
+  get out2() {
+    return this.f2Gain;
+  }
+
+  //connect vca->external_node
+  // connect(node) {
+  //   this.vca.connect(node);
+  // }
 
   //start/stop
   start(time=0) {

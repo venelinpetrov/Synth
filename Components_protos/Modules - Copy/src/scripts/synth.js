@@ -2,7 +2,7 @@
 
   var patch;
   var equalTempered440;
-
+  var effects = {}; // global effects
 
   window.onload = function() {
     patch = new Patch();
@@ -41,6 +41,7 @@
       } else {
         active_voices[note].stop(ctx.currentTime + 3);
         delete active_voices[note];
+        voice = null;
       }
     }
 
@@ -49,6 +50,16 @@
 
     //Initialize patch
     initPatch();
+
+    //Create gloabal effects
+    effects['Filter1'] = new Filter(ctx);
+    effects['Filter1'].bypass(true);
+    effects['Filter2'] = new Filter(ctx);
+    effects['Filter2'].bypass(true);
+  }
+  //Create global effects function
+  function createEffects() {
+
   }
 
   //Initialize patch function
@@ -59,8 +70,20 @@
     [].forEach.call(params, function(v){
       v.value = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('input', function (e){
+        var vcf1 = effects['Filter1'];
+        var vcf2 = effects['Filter2'];
         patch.setParameter(e.target.id, e.target.value);
         console.log(patch);
+
+        vcf1.setType(patch.getParameter('Filter1_type'));
+        vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
+        vcf1.setGain(patch.getParameter('Filter1_gain'));
+        vcf1.setQ(patch.getParameter('Filter1_Q'));
+
+        vcf2.setType(patch.getParameter('Filter2_type'));
+        vcf2.setFrequency(patch.getParameter('Filter2_frequency'));
+        vcf2.setGain(patch.getParameter('Filter2_gain'));
+        vcf2.setQ(patch.getParameter('Filter2_Q'));
       }, false);
     });
 
@@ -68,7 +91,9 @@
     [].forEach.call(powers, function(v){
       v.checked = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('change', function (e){
+
         patch.setParameter(e.target.id, e.target.checked);
+
         console.log(patch);
       }, false);
     });
@@ -113,6 +138,15 @@
           value: 0
       });
 
+      var f1f2Control = HtmlControl.createSlider({
+        id: this.id + '_F1F2',
+        min: 0,
+        max: 1,
+        step: .1,
+        value: patch.getParameter(this.id + '_F1F2'),
+        advanced: false
+      });
+
       //on/off control
       this.appendChild(powerControl.label);
       this.appendChild(powerControl.input);
@@ -130,6 +164,9 @@
       this.appendChild(gainControl.label);
       this.appendChild(gainControl.slider);
       this.appendChild(gainControl.valueIndicator);
+
+      //F1F2 control
+      this.appendChild(f1f2Control.slider);
 
       console.log('Oscillator created');
     };
@@ -162,8 +199,8 @@
       var QControl = HtmlControl.createSlider({
         id: this.id + '_Q',
         labelText: 'Q',
-        min: 0,
-        max: 12,
+        min: .2,
+        max: 30,
         step: .1,
         value: patch.getParameter(this.id + '_Q'),
         advanced: true
@@ -179,11 +216,30 @@
         advanced: true
       });
 
+      var dryWetControl = HtmlControl.createSlider({
+        id: this.id + '_dryWet',
+        labelText: 'Dry/Wet (%)',
+        min: 0,
+        max: 100,
+        step: 1,
+        value: patch.getParameter(this.id + '_dryWet'),
+        advanced: true
+      });
       var type = patch.getParameter(this.id + '_type');
 
       //on/off
       this.appendChild(powerControl.label);
       this.appendChild(powerControl.input);
+      //handle filter on/off -> pypass it when off
+      powerControl.input.addEventListener('change', (function(){
+        if(patch.getParameter(this.id + '_on') == false) {
+          effects[this.id].bypass(false);
+          console.log('bypass on', this.id);
+        } else {
+          effects[this.id].bypass(true);
+          console.log('bypass off', this.id);
+        }
+      }).bind(this), false);
 
       //filter type control
       this.appendChild(filterTypeControl.label);
@@ -214,9 +270,14 @@
             QControl.label.style.display = 'none';
             QControl.slider.style.display = 'none';
             QControl.valueIndicator.style.display = 'none';
+          } else {
+            QControl.label.style.display = '';
+            QControl.slider.style.display = '';
+            QControl.valueIndicator.style.display = '';
           }
         }
       });
+
       //frequency control
       this.appendChild(frequencyControl.label);
       this.appendChild(frequencyControl.slider);
@@ -245,6 +306,11 @@
           QControl.valueIndicator.style.display = 'none';
         }
       }
+
+      //dry/wet control
+      this.appendChild(dryWetControl.label);
+      this.appendChild(dryWetControl.slider);
+      this.appendChild(dryWetControl.valueIndicator);
 
       console.log('Filter created');
     };

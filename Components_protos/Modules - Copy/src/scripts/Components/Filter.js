@@ -43,8 +43,8 @@ class Filter {
     //this.vcf.Q.value = 2;
     this.vcf.type = 'lowpass';
     //dry/wet gains
-    this.dryGain = this.ctx.createGain(); this.dryGain.gain.value = 0;
-    this.wetGain = this.ctx.createGain(); this.wetGain.gain.value = .5;
+    this.dryGain = this.ctx.createGain(); this.dryGain.gain.value = 0; //for testing
+    this.wetGain = this.ctx.createGain(); this.wetGain.gain.value = .5; //for testing
 
     //filter component input and output
     this.inputNode = this.ctx.createGain();
@@ -69,6 +69,17 @@ class Filter {
     this.outputNode.connect(node);
   }
 
+  bypass(bypassed){
+    //this.inputNode.disconnect(this.vcf);
+    if(bypassed) {
+      this.inputNode.disconnect(this.vcf);
+      this.inputNode.connect(this.outputNode);
+    } else {
+      this.inputNode.connect(this.vcf);
+      this.inputNode.disconnect(this.outputNode);
+    }
+
+  }
   //get/set type
   getType() {
     return this.vcf.type;
@@ -99,6 +110,6 @@ class Filter {
     return thid.vcf.Q.value;
   }
   setQ(value) {
-    thid.vcf.Q.value = value;
+    this.vcf.Q.value = value;
   }
 }

@@ -14,7 +14,9 @@ class HtmlControl {
     slider.max = max;
     slider.step = step;
     slider.value = value;
-
+    if(!advanced) {
+      slider.id = id;
+    }
 
     //advanced slider
     if(advanced) {

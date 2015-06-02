@@ -51,8 +51,8 @@ var Filter = (function () {
     //this.vcf.Q.value = 2;
     this.vcf.type = 'lowpass';
     //dry/wet gains
-    this.dryGain = this.ctx.createGain();this.dryGain.gain.value = 0;
-    this.wetGain = this.ctx.createGain();this.wetGain.gain.value = 0.5;
+    this.dryGain = this.ctx.createGain();this.dryGain.gain.value = 0; //for testing
+    this.wetGain = this.ctx.createGain();this.wetGain.gain.value = 0.5; //for testing
 
     //filter component input and output
     this.inputNode = this.ctx.createGain();
@@ -78,6 +78,18 @@ var Filter = (function () {
     key: 'connect',
     value: function connect(node) {
       this.outputNode.connect(node);
+    }
+  }, {
+    key: 'bypass',
+    value: function bypass(bypassed) {
+      //this.inputNode.disconnect(this.vcf);
+      if (bypassed) {
+        this.inputNode.disconnect(this.vcf);
+        this.inputNode.connect(this.outputNode);
+      } else {
+        this.inputNode.connect(this.vcf);
+        this.inputNode.disconnect(this.outputNode);
+      }
     }
   }, {
     key: 'getType',
@@ -125,7 +137,7 @@ var Filter = (function () {
   }, {
     key: 'setQ',
     value: function setQ(value) {
-      thid.vcf.Q.value = value;
+      this.vcf.Q.value = value;
     }
   }]);
 
@@ -167,6 +179,9 @@ var HtmlControl = (function () {
       slider.max = max;
       slider.step = step;
       slider.value = value;
+      if (!advanced) {
+        slider.id = id;
+      }
 
       //advanced slider
       if (advanced) {
@@ -294,7 +309,14 @@ var Oscillator = (function () {
 
     //vco->vca->destination
     this.vco.connect(this.vca);
-    //this.vca.connect(this.ctx.destination);
+
+    //f1/f2 crossfader gains
+    this.f1Gain = this.ctx.createGain();
+    this.f2Gain = this.ctx.createGain();
+
+    //connect vca to f1Gain and f2Gain
+    this.vca.connect(this.f1Gain);
+    this.vca.connect(this.f2Gain);
   }
 
   _createClass(Oscillator, [{
@@ -347,14 +369,33 @@ var Oscillator = (function () {
       this.vco.frequency.value = value;
     }
   }, {
-    key: 'connect',
+    key: 'setFilterCrossfader',
 
-    //connect vca->external_node
-    value: function connect(node) {
-      this.vca.connect(node);
+    //set crossfader value
+    //value=1 means all the output goes to filter1
+    value: function setFilterCrossfader(value) {
+      this.f1Gain.gain.value = value;
+      this.f2Gain.gain.value = 1 - value;
+    }
+  }, {
+    key: 'out1',
+
+    //getters for oscillator outputs
+    get: function () {
+      return this.f1Gain;
+    }
+  }, {
+    key: 'out2',
+    get: function () {
+      return this.f2Gain;
     }
   }, {
     key: 'start',
+
+    //connect vca->external_node
+    // connect(node) {
+    //   this.vca.connect(node);
+    // }
 
     //start/stop
     value: function start() {
@@ -383,17 +424,27 @@ var Patch = (function () {
       'Osc1_wave': 'square',
       'Osc1_pitch': 0,
       'Osc1_gain': 0.8,
+      'Osc1_F1F2': 0.5,
 
       'Osc2_on': false,
       'Osc2_wave': 'sine',
       'Osc2_pitch': 0,
       'Osc2_gain': 0.5,
+      'Osc2_F1F2': 0.5,
 
       'Filter1_on': false,
       'Filter1_type': 'lowpass',
-      'Filter1_frequency': 600,
+      'Filter1_frequency': 300,
       'Filter1_Q': 1,
-      'Filter1_gain': 0
+      'Filter1_gain': 0,
+      'Filter1_dryWet': 50,
+
+      'Filter2_on': false,
+      'Filter2_type': 'lowpass',
+      'Filter2_frequency': 300,
+      'Filter2_Q': 1,
+      'Filter2_gain': 0,
+      'Filter2_dryWet': 50
     };
   }
 
@@ -437,17 +488,25 @@ var Voice = (function () {
   _createClass(Voice, [{
     key: 'start',
     value: function start(velocity) {
-      var vco1, vco2, vcf1;
+      var vco1;
+      var vco2;
+      var vcf1 = effects['Filter1'];
+      var vcf2 = effects['Filter2'];
       if (patch.getParameter('Osc1_on') == true) {
         vco1 = new Oscillator(this.ctx);
-        vcf1 = new Filter(this.ctx);
-        vco1.connect(vcf1.input);
-        vcf1.connect(this.ctx.destination);
+        //vcf1 = new Filter(this.ctx);
+
         vco1.setType(patch.getParameter('Osc1_wave'));
         vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
         vco1.setFrequency(equalTempered440[this.note]); //sdfsdf
         vco1.setPitch(+patch.getParameter('Osc1_pitch'));
         vco1.start();
+
+        //connect
+        vco1.setFilterCrossfader(+patch.getParameter('Osc1_F1F2'));
+        vco1.out1.connect(vcf1.input);
+        vco1.out2.connect(vcf2.input);
+
         this.oscillators.push(vco1);
       }
 
@@ -458,8 +517,17 @@ var Voice = (function () {
         vco2.setFrequency(equalTempered440[this.note]); //sdfsdf
         vco2.setPitch(+patch.getParameter('Osc2_pitch'));
         vco2.start();
+
+        //connect
+        vco2.setFilterCrossfader(+patch.getParameter('Osc2_F1F2'));
+        vco2.out1.connect(vcf1.input);
+        vco2.out2.connect(vcf2.input);
+
         this.oscillators.push(vco2);
       }
+
+      vcf1.connect(this.ctx.destination);
+      vcf2.connect(this.ctx.destination);
       console.log(this.oscillators);
     }
   }, {
@@ -478,6 +546,7 @@ var Voice = (function () {
 
 var patch;
 var equalTempered440;
+var effects = {}; // global effects
 
 window.onload = function () {
   patch = new Patch();
@@ -516,6 +585,7 @@ window.onload = function () {
     } else {
       active_voices[note].stop(ctx.currentTime + 3);
       delete active_voices[note];
+      voice = null;
     }
   }
 
@@ -524,7 +594,15 @@ window.onload = function () {
 
   //Initialize patch
   initPatch();
+
+  //Create gloabal effects
+  effects['Filter1'] = new Filter(ctx);
+  effects['Filter1'].bypass(true);
+  effects['Filter2'] = new Filter(ctx);
+  effects['Filter2'].bypass(true);
 };
+//Create global effects function
+function createEffects() {}
 
 //Initialize patch function
 function initPatch() {
@@ -534,8 +612,20 @@ function initPatch() {
   [].forEach.call(params, function (v) {
     v.value = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('input', function (e) {
+      var vcf1 = effects['Filter1'];
+      var vcf2 = effects['Filter2'];
       patch.setParameter(e.target.id, e.target.value);
       console.log(patch);
+
+      vcf1.setType(patch.getParameter('Filter1_type'));
+      vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
+      vcf1.setGain(patch.getParameter('Filter1_gain'));
+      vcf1.setQ(patch.getParameter('Filter1_Q'));
+
+      vcf2.setType(patch.getParameter('Filter2_type'));
+      vcf2.setFrequency(patch.getParameter('Filter2_frequency'));
+      vcf2.setGain(patch.getParameter('Filter2_gain'));
+      vcf2.setQ(patch.getParameter('Filter2_Q'));
     }, false);
   });
 
@@ -543,7 +633,9 @@ function initPatch() {
   [].forEach.call(powers, function (v) {
     v.checked = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('change', function (e) {
+
       patch.setParameter(e.target.id, e.target.checked);
+
       console.log(patch);
     }, false);
   });
@@ -588,6 +680,15 @@ function initSynth() {
       value: 0
     });
 
+    var f1f2Control = HtmlControl.createSlider({
+      id: this.id + '_F1F2',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_F1F2'),
+      advanced: false
+    });
+
     //on/off control
     this.appendChild(powerControl.label);
     this.appendChild(powerControl.input);
@@ -605,6 +706,9 @@ function initSynth() {
     this.appendChild(gainControl.label);
     this.appendChild(gainControl.slider);
     this.appendChild(gainControl.valueIndicator);
+
+    //F1F2 control
+    this.appendChild(f1f2Control.slider);
 
     console.log('Oscillator created');
   };
@@ -637,8 +741,8 @@ function initSynth() {
     var QControl = HtmlControl.createSlider({
       id: this.id + '_Q',
       labelText: 'Q',
-      min: 0,
-      max: 12,
+      min: 0.2,
+      max: 30,
       step: 0.1,
       value: patch.getParameter(this.id + '_Q'),
       advanced: true
@@ -654,11 +758,30 @@ function initSynth() {
       advanced: true
     });
 
+    var dryWetControl = HtmlControl.createSlider({
+      id: this.id + '_dryWet',
+      labelText: 'Dry/Wet (%)',
+      min: 0,
+      max: 100,
+      step: 1,
+      value: patch.getParameter(this.id + '_dryWet'),
+      advanced: true
+    });
     var type = patch.getParameter(this.id + '_type');
 
     //on/off
     this.appendChild(powerControl.label);
     this.appendChild(powerControl.input);
+    //handle filter on/off -> pypass it when off
+    powerControl.input.addEventListener('change', (function () {
+      if (patch.getParameter(this.id + '_on') == false) {
+        effects[this.id].bypass(false);
+        console.log('bypass on', this.id);
+      } else {
+        effects[this.id].bypass(true);
+        console.log('bypass off', this.id);
+      }
+    }).bind(this), false);
 
     //filter type control
     this.appendChild(filterTypeControl.label);
@@ -686,9 +809,14 @@ function initSynth() {
           QControl.label.style.display = 'none';
           QControl.slider.style.display = 'none';
           QControl.valueIndicator.style.display = 'none';
+        } else {
+          QControl.label.style.display = '';
+          QControl.slider.style.display = '';
+          QControl.valueIndicator.style.display = '';
         }
       }
     });
+
     //frequency control
     this.appendChild(frequencyControl.label);
     this.appendChild(frequencyControl.slider);
@@ -714,6 +842,11 @@ function initSynth() {
         QControl.valueIndicator.style.display = 'none';
       }
     }
+
+    //dry/wet control
+    this.appendChild(dryWetControl.label);
+    this.appendChild(dryWetControl.slider);
+    this.appendChild(dryWetControl.valueIndicator);
 
     console.log('Filter created');
   };
