@@ -18,14 +18,14 @@ class Patch {
       'Filter1_frequency': 300,
       'Filter1_Q': 1,
       'Filter1_gain': 0,
-      'Filter1_dryWet': 50,
+      'Filter1_dryWet': .5,
 
       'Filter2_on': false,
       'Filter2_type': 'lowpass',
       'Filter2_frequency': 300,
       'Filter2_Q': 1,
       'Filter2_gain': 0,
-      'Filter2_dryWet': 50
+      'Filter2_dryWet': .5
     }
   }
 

@@ -51,8 +51,8 @@ var Filter = (function () {
     //this.vcf.Q.value = 2;
     this.vcf.type = 'lowpass';
     //dry/wet gains
-    this.dryGain = this.ctx.createGain();this.dryGain.gain.value = 0; //for testing
-    this.wetGain = this.ctx.createGain();this.wetGain.gain.value = 0.5; //for testing
+    this.dryGain = this.ctx.createGain();
+    this.wetGain = this.ctx.createGain();
 
     //filter component input and output
     this.inputNode = this.ctx.createGain();
@@ -138,6 +138,15 @@ var Filter = (function () {
     key: 'setQ',
     value: function setQ(value) {
       this.vcf.Q.value = value;
+    }
+  }, {
+    key: 'setDryWet',
+
+    //get/set dry/wet
+    //value=1 means 100% wet signal
+    value: function setDryWet(value) {
+      this.wetGain.gain.value = value;
+      this.dryGain.gain.value = 1 - value;
     }
   }]);
 
@@ -437,14 +446,14 @@ var Patch = (function () {
       'Filter1_frequency': 300,
       'Filter1_Q': 1,
       'Filter1_gain': 0,
-      'Filter1_dryWet': 50,
+      'Filter1_dryWet': 0.5,
 
       'Filter2_on': false,
       'Filter2_type': 'lowpass',
       'Filter2_frequency': 300,
       'Filter2_Q': 1,
       'Filter2_gain': 0,
-      'Filter2_dryWet': 50
+      'Filter2_dryWet': 0.5
     };
   }
 
@@ -621,11 +630,13 @@ function initPatch() {
       vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
       vcf1.setGain(patch.getParameter('Filter1_gain'));
       vcf1.setQ(patch.getParameter('Filter1_Q'));
+      vcf1.setDryWet(patch.getParameter('Filter1_dryWet'));
 
       vcf2.setType(patch.getParameter('Filter2_type'));
       vcf2.setFrequency(patch.getParameter('Filter2_frequency'));
       vcf2.setGain(patch.getParameter('Filter2_gain'));
       vcf2.setQ(patch.getParameter('Filter2_Q'));
+      vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
     }, false);
   });
 
@@ -762,8 +773,8 @@ function initSynth() {
       id: this.id + '_dryWet',
       labelText: 'Dry/Wet (%)',
       min: 0,
-      max: 100,
-      step: 1,
+      max: 1,
+      step: 0.1,
       value: patch.getParameter(this.id + '_dryWet'),
       advanced: true
     });

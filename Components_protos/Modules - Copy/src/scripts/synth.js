@@ -79,11 +79,13 @@
         vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
         vcf1.setGain(patch.getParameter('Filter1_gain'));
         vcf1.setQ(patch.getParameter('Filter1_Q'));
+        vcf1.setDryWet(patch.getParameter('Filter1_dryWet'));
 
         vcf2.setType(patch.getParameter('Filter2_type'));
         vcf2.setFrequency(patch.getParameter('Filter2_frequency'));
         vcf2.setGain(patch.getParameter('Filter2_gain'));
         vcf2.setQ(patch.getParameter('Filter2_Q'));
+        vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
       }, false);
     });
 
@@ -220,8 +222,8 @@
         id: this.id + '_dryWet',
         labelText: 'Dry/Wet (%)',
         min: 0,
-        max: 100,
-        step: 1,
+        max: 1,
+        step: .1,
         value: patch.getParameter(this.id + '_dryWet'),
         advanced: true
       });

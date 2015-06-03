@@ -43,8 +43,8 @@ class Filter {
     //this.vcf.Q.value = 2;
     this.vcf.type = 'lowpass';
     //dry/wet gains
-    this.dryGain = this.ctx.createGain(); this.dryGain.gain.value = 0; //for testing
-    this.wetGain = this.ctx.createGain(); this.wetGain.gain.value = .5; //for testing
+    this.dryGain = this.ctx.createGain();
+    this.wetGain = this.ctx.createGain();
 
     //filter component input and output
     this.inputNode = this.ctx.createGain();
@@ -104,12 +104,18 @@ class Filter {
     this.vcf.gain.value = value;
   }
 
-
   //get/set Q
   getQ() {
     return thid.vcf.Q.value;
   }
   setQ(value) {
     this.vcf.Q.value = value;
+  }
+
+  //get/set dry/wet
+  //value=1 means 100% wet signal
+  setDryWet(value) {
+    this.wetGain.gain.value = value;
+    this.dryGain.gain.value = 1 - value;
   }
 }
