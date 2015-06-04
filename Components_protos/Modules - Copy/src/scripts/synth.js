@@ -58,6 +58,7 @@
     effects['Filter2'] = new Filter(ctx);
     effects['Filter2'].bypass(true);
     effects['Envelope'] = new Envelope(ctx);
+    effects['MasterAmp'] = new MasterAmp(ctx);
   }
   //Create global effects function
   function createEffects() {
@@ -108,6 +109,7 @@
     var oscProto;
     var filterProto;
     var envelopeProto;
+    var ampProto;
 
     //Oscillator html rendering
     oscProto = Object.create(HTMLElement.prototype);
@@ -384,4 +386,41 @@
       this.appendChild(releaseTimeControl.valueIndicator);
     };
     document.registerElement('x-envelope', {prototype: envelopeProto});
+
+    //Amplifier
+    ampProto = Object.create(HTMLElement.prototype);
+    ampProto.createdCallback = function() {
+      var labelVolume;
+      var labelPan;
+      var masterGainControl = HtmlControl.createSlider({
+        id: this.id + '_masterGain',
+        min: 0,
+        max: 1,
+        step: .1,
+        value: patch.getParameter(this.id + '_masterGain'),
+        advanced: false
+      });
+
+      var panControl = HtmlControl.createSlider({
+        id: this.id + '_pan',
+        min: -1,
+        max: 1,
+        step: .1,
+        value: patch.getParameter(this.id + '_pan'),
+        advanced: false
+      });
+
+      //master gain
+      labelVolume = document.createElement('label');
+      labelVolume.innerHTML = 'Volume';
+      this.appendChild(labelVolume);
+      this.appendChild(masterGainControl.slider);
+
+      //pan
+      labelPan = document.createElement('label');
+      labelPan.innerHTML = 'Pan';
+      this.appendChild(labelPan);
+      this.appendChild(panControl.slider);
+    };
+    document.registerElement('x-amp', {prototype: ampProto});
   }

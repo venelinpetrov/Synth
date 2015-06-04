@@ -1,6 +1,9 @@
 class Patch {
   constructor(){
     this._patch = {
+      'Amp_masterGain': .8,
+      'Amp_pan': 0,
+
       'Osc1_on': true,
       'Osc1_wave': 'square',
       'Osc1_pitch': 0,

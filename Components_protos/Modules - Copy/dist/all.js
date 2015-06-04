@@ -364,6 +364,46 @@ var HtmlControl = (function () {
   return HtmlControl;
 })();
 
+var MasterAmp = (function () {
+  function MasterAmp(ctx) {
+    _classCallCheck(this, MasterAmp);
+
+    this.ctx = ctx;
+
+    //nodes
+    this.masterGain = this.ctx.createGain();
+    this.stereoPanner = this.ctx.createStereoPanner();
+
+    //connections
+    this.masterGain.connect(this.stereoPanner);
+    this.stereoPanner.connect(this.ctx.destination);
+  }
+
+  _createClass(MasterAmp, [{
+    key: 'setMasterGain',
+
+    //set masterGain (a.k.a master volume of the synth)
+    value: function setMasterGain(value) {
+      this.masterGain.gain.value = value;
+    }
+  }, {
+    key: 'setPan',
+
+    //set pan, value is in range -1 to 1, where -1 means all the signal goes left
+    //and +1 means all the signal goes right
+    value: function setPan(value) {
+      this.stereoPanner.pan.value = value;
+    }
+  }, {
+    key: 'input',
+    get: function () {
+      return this.masterGain;
+    }
+  }]);
+
+  return MasterAmp;
+})();
+
 var Oscillator = (function () {
   function Oscillator(ctx) {
     _classCallCheck(this, Oscillator);
@@ -493,6 +533,9 @@ var Patch = (function () {
     _classCallCheck(this, Patch);
 
     this._patch = {
+      'Amp_masterGain': 0.8,
+      'Amp_pan': 0,
+
       'Osc1_on': true,
       'Osc1_wave': 'square',
       'Osc1_pitch': 0,
@@ -572,6 +615,7 @@ var Voice = (function () {
       var vcf1 = effects['Filter1'];
       var vcf2 = effects['Filter2'];
       var vcoEnvelope = effects['Envelope'];
+      var masterAmp = effects['MasterAmp'];
 
       if (patch.getParameter('Osc1_on') == true) {
         vco1 = new Oscillator(this.ctx);
@@ -624,8 +668,10 @@ var Voice = (function () {
         this.oscillators.push(vco2);
       }
 
-      vcf1.connect(this.ctx.destination);
-      vcf2.connect(this.ctx.destination);
+      vcf1.connect(masterAmp.input);
+      vcf2.connect(masterAmp.input);
+      masterAmp.setPan(patch.getParameter('Amp_pan'));
+      masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
     }
   }, {
     key: 'stop',
@@ -708,6 +754,7 @@ window.onload = function () {
   effects['Filter2'] = new Filter(ctx);
   effects['Filter2'].bypass(true);
   effects['Envelope'] = new Envelope(ctx);
+  effects['MasterAmp'] = new MasterAmp(ctx);
 };
 //Create global effects function
 function createEffects() {}
@@ -756,6 +803,7 @@ function initSynth() {
   var oscProto;
   var filterProto;
   var envelopeProto;
+  var ampProto;
 
   //Oscillator html rendering
   oscProto = Object.create(HTMLElement.prototype);
@@ -1026,5 +1074,42 @@ function initSynth() {
     this.appendChild(releaseTimeControl.valueIndicator);
   };
   document.registerElement('x-envelope', { prototype: envelopeProto });
+
+  //Amplifier
+  ampProto = Object.create(HTMLElement.prototype);
+  ampProto.createdCallback = function () {
+    var labelVolume;
+    var labelPan;
+    var masterGainControl = HtmlControl.createSlider({
+      id: this.id + '_masterGain',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_masterGain'),
+      advanced: false
+    });
+
+    var panControl = HtmlControl.createSlider({
+      id: this.id + '_pan',
+      min: -1,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_pan'),
+      advanced: false
+    });
+
+    //master gain
+    labelVolume = document.createElement('label');
+    labelVolume.innerHTML = 'Volume';
+    this.appendChild(labelVolume);
+    this.appendChild(masterGainControl.slider);
+
+    //pan
+    labelPan = document.createElement('label');
+    labelPan.innerHTML = 'Pan';
+    this.appendChild(labelPan);
+    this.appendChild(panControl.slider);
+  };
+  document.registerElement('x-amp', { prototype: ampProto });
 }
 //# sourceMappingURL=all.js.map

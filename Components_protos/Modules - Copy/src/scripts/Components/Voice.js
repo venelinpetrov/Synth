@@ -12,6 +12,7 @@ class Voice {
     var vcf1 = effects['Filter1'];
     var vcf2 = effects['Filter2'];
     var vcoEnvelope = effects['Envelope'];
+    var masterAmp = effects['MasterAmp'];
 
     if(patch.getParameter('Osc1_on') == true) {
       vco1 = new Oscillator(this.ctx);
@@ -65,8 +66,10 @@ class Voice {
       this.oscillators.push(vco2);
     }
 
-    vcf1.connect(this.ctx.destination);
-    vcf2.connect(this.ctx.destination);
+    vcf1.connect(masterAmp.input);
+    vcf2.connect(masterAmp.input);
+    masterAmp.setPan(patch.getParameter('Amp_pan'));
+    masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
   }
 
   stop() {
