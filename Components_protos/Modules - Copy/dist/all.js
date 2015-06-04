@@ -1,4 +1,68 @@
 /**
+  ADSR Envelope class
+
+  A: Attack
+  D: Decay
+  S: Sustain
+  R: Release
+
+  setValueAtTime(value, startTime)
+  linearRampToValueAtTime(value, endTime)
+  setTargetAtTime(target, startTime, timeConstant)
+    -target parameter is the value the parameter will start changing to at the given time.
+
+*/
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Envelope = (function () {
+  function Envelope(ctx) {
+    _classCallCheck(this, Envelope);
+
+    this.ctx = ctx;
+  }
+
+  _createClass(Envelope, [{
+    key: 'setADSR',
+
+    //the method currently calculates the total time for which the note is not in sustain state
+    //the release phase is independently set in Voice.stop()
+    value: function setADSR(audioParam) {
+      var _ref = arguments[1] === undefined ? {} : arguments[1];
+
+      var _ref$attackTime = _ref.attackTime;
+      var attackTime = _ref$attackTime === undefined ? 0 : _ref$attackTime;
+      var _ref$decayTime = _ref.decayTime;
+      var decayTime = _ref$decayTime === undefined ? 0 : _ref$decayTime;
+      var _ref$sustainLevel = _ref.sustainLevel;
+      var sustainLevel = _ref$sustainLevel === undefined ? 1 : _ref$sustainLevel;
+      var _ref$releaseTime = _ref.releaseTime;
+      var releaseTime = _ref$releaseTime === undefined ? 0 : _ref$releaseTime;
+
+      var now = this.ctx.currentTime;
+
+      //audioParam.cancelScheduledValues(now);
+      audioParam.setValueAtTime(0, now);
+      //attack phase
+      audioParam.linearRampToValueAtTime(audioParam.value, now + attackTime);
+      //decay phase and sustain level
+      audioParam.linearRampToValueAtTime(audioParam.value * sustainLevel, now + attackTime + decayTime);
+
+      //release phase
+      //the release phase is independently set in Voice.stop() via
+      //oscillator.vca.gain.linearRampToValueAtTime(0,this.ctx.currentTime + this.endTime);
+
+      return attackTime + decayTime + releaseTime;
+    }
+  }]);
+
+  return Envelope;
+})();
+
+/**
   Filter class
 
   Filter types
@@ -33,11 +97,6 @@
       @ Q - controls the width of the band of frequencies that are attenuated. A large value implies a narrow width [.2 to 30]
 
 */
-'use strict';
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Filter = (function () {
   function Filter(ctx) {
@@ -163,18 +222,18 @@ var HtmlControl = (function () {
 
     //Slider control
     value: function createSlider() {
-      var _ref = arguments[0] === undefined ? {} : arguments[0];
+      var _ref2 = arguments[0] === undefined ? {} : arguments[0];
 
-      var id = _ref.id;
-      var _ref$className = _ref.className;
-      var className = _ref$className === undefined ? '' : _ref$className;
-      var labelText = _ref.labelText;
-      var min = _ref.min;
-      var max = _ref.max;
-      var step = _ref.step;
-      var value = _ref.value;
-      var _ref$advanced = _ref.advanced;
-      var advanced = _ref$advanced === undefined ? false : _ref$advanced;
+      var id = _ref2.id;
+      var _ref2$className = _ref2.className;
+      var className = _ref2$className === undefined ? '' : _ref2$className;
+      var labelText = _ref2.labelText;
+      var min = _ref2.min;
+      var max = _ref2.max;
+      var step = _ref2.step;
+      var value = _ref2.value;
+      var _ref2$advanced = _ref2.advanced;
+      var advanced = _ref2$advanced === undefined ? false : _ref2$advanced;
 
       var valueIndicator;
       var label;
@@ -228,12 +287,12 @@ var HtmlControl = (function () {
   }, {
     key: 'createSelect',
     value: function createSelect() {
-      var _ref2 = arguments[0] === undefined ? {} : arguments[0];
+      var _ref3 = arguments[0] === undefined ? {} : arguments[0];
 
-      var id = _ref2.id;
-      var labelText = _ref2.labelText;
-      var _ref2$options = _ref2.options;
-      var options = _ref2$options === undefined ? [] : _ref2$options;
+      var id = _ref3.id;
+      var labelText = _ref3.labelText;
+      var _ref3$options = _ref3.options;
+      var options = _ref3$options === undefined ? [] : _ref3$options;
 
       var select = document.createElement('select');
       var label = document.createElement('label');
@@ -252,18 +311,18 @@ var HtmlControl = (function () {
   }, {
     key: 'createNumericTextBox',
     value: function createNumericTextBox() {
-      var _ref3 = arguments[0] === undefined ? {} : arguments[0];
+      var _ref4 = arguments[0] === undefined ? {} : arguments[0];
 
-      var id = _ref3.id;
-      var labelText = _ref3.labelText;
-      var _ref3$min = _ref3.min;
-      var min = _ref3$min === undefined ? 0 : _ref3$min;
-      var _ref3$max = _ref3.max;
-      var max = _ref3$max === undefined ? 1 : _ref3$max;
-      var _ref3$step = _ref3.step;
-      var step = _ref3$step === undefined ? 1 : _ref3$step;
-      var _ref3$value = _ref3.value;
-      var value = _ref3$value === undefined ? 1 : _ref3$value;
+      var id = _ref4.id;
+      var labelText = _ref4.labelText;
+      var _ref4$min = _ref4.min;
+      var min = _ref4$min === undefined ? 0 : _ref4$min;
+      var _ref4$max = _ref4.max;
+      var max = _ref4$max === undefined ? 1 : _ref4$max;
+      var _ref4$step = _ref4.step;
+      var step = _ref4$step === undefined ? 1 : _ref4$step;
+      var _ref4$value = _ref4.value;
+      var value = _ref4$value === undefined ? 1 : _ref4$value;
 
       var input = document.createElement('input');
       var label = document.createElement('label');
@@ -282,11 +341,11 @@ var HtmlControl = (function () {
   }, {
     key: 'createCheckBox',
     value: function createCheckBox() {
-      var _ref4 = arguments[0] === undefined ? {} : arguments[0];
+      var _ref5 = arguments[0] === undefined ? {} : arguments[0];
 
-      var id = _ref4.id;
-      var labelText = _ref4.labelText;
-      var className = _ref4.className;
+      var id = _ref5.id;
+      var labelText = _ref5.labelText;
+      var className = _ref5.className;
 
       var input = document.createElement('input');
       var label = document.createElement('label');
@@ -351,7 +410,7 @@ var Oscillator = (function () {
     key: 'setGain',
     value: function setGain(value) {
       this.vca.gain.value = value;
-      this.vca.gain.setTargetAtTime(0, this.ctx.currentTime, 0.5);
+      //this.vca.gain.setTargetAtTime(0, this.ctx.currentTime, .5);
     }
   }, {
     key: 'getPitch',
@@ -399,6 +458,11 @@ var Oscillator = (function () {
       return this.f2Gain;
     }
   }, {
+    key: 'mainVca',
+    get: function () {
+      return this.vca;
+    }
+  }, {
     key: 'start',
 
     //connect vca->external_node
@@ -440,6 +504,11 @@ var Patch = (function () {
       'Osc2_pitch': 0,
       'Osc2_gain': 0.5,
       'Osc2_F1F2': 0.5,
+
+      'Envelope_attackTime': 0,
+      'Envelope_decayTime': 0,
+      'Envelope_sustainLevel': 0.7,
+      'Envelope_releaseTime': 0.06,
 
       'Filter1_on': false,
       'Filter1_type': 'lowpass',
@@ -492,6 +561,7 @@ var Voice = (function () {
     this.note = note;
     this.ctx = ctx;
     this.oscillators = [];
+    this.endTime = 0;
   }
 
   _createClass(Voice, [{
@@ -501,10 +571,11 @@ var Voice = (function () {
       var vco2;
       var vcf1 = effects['Filter1'];
       var vcf2 = effects['Filter2'];
+      var vcoEnvelope = effects['Envelope'];
+
       if (patch.getParameter('Osc1_on') == true) {
         vco1 = new Oscillator(this.ctx);
-        //vcf1 = new Filter(this.ctx);
-
+        //vco1Envelope = new Envelope(this.ctx);
         vco1.setType(patch.getParameter('Osc1_wave'));
         vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
         vco1.setFrequency(equalTempered440[this.note]); //sdfsdf
@@ -516,6 +587,15 @@ var Voice = (function () {
         vco1.out1.connect(vcf1.input);
         vco1.out2.connect(vcf2.input);
 
+        //envelope
+        this.endTime = vcoEnvelope.setADSR(vco1.vca.gain, {
+          attackTime: +patch.getParameter('Envelope_attackTime'),
+          decayTime: +patch.getParameter('Envelope_decayTime'),
+          sustainLevel: +patch.getParameter('Envelope_sustainLevel'),
+          releaseTime: +patch.getParameter('Envelope_releaseTime')
+        });
+
+        //track active oscillators, so they can be stoped after that
         this.oscillators.push(vco1);
       }
 
@@ -532,21 +612,38 @@ var Voice = (function () {
         vco2.out1.connect(vcf1.input);
         vco2.out2.connect(vcf2.input);
 
+        //envelope
+        this.endTime = vcoEnvelope.setADSR(vco2.vca.gain, {
+          attackTime: +patch.getParameter('Envelope_attackTime'),
+          decayTime: +patch.getParameter('Envelope_decayTime'),
+          sustainLevel: +patch.getParameter('Envelope_sustainLevel'),
+          releaseTime: +patch.getParameter('Envelope_releaseTime')
+        });
+
+        //track active oscillators, so they can be stoped after that
         this.oscillators.push(vco2);
       }
 
       vcf1.connect(this.ctx.destination);
       vcf2.connect(this.ctx.destination);
-      console.log(this.oscillators);
     }
   }, {
     key: 'stop',
     value: function stop() {
-      var time = arguments[0] === undefined ? 0 : arguments[0];
+      var _this = this;
 
-      this.oscillators.forEach(function (oscillators) {
-        oscillators.stop(time);
+      this.oscillators.forEach(function (oscillator) {
+        //release stage of the envelope
+        oscillator.vca.gain.setValueAtTime(oscillator.vca.gain.value, _this.ctx.currentTime); //hold the sustain gain (preserve from peaking noises and sound flikering)
+        oscillator.vca.gain.linearRampToValueAtTime(0, _this.ctx.currentTime + _this.endTime); //lineary tend to 0 at the specified rate
+
+        oscillator.stop(_this.ctx.currentTime + _this.endTime); //osc stops when note is dead
       });
+    }
+  }, {
+    key: 'getEndTime',
+    value: function getEndTime() {
+      return this.endTime;
     }
   }]);
 
@@ -590,11 +687,12 @@ window.onload = function () {
       console.log('-->', ctx);
       voice = new Voice(note, ctx);
       active_voices[note] = voice;
+      console.log(active_voices);
       voice.start(velocity);
     } else {
-      active_voices[note].stop(ctx.currentTime + 3);
+      active_voices[note].stop();
       delete active_voices[note];
-      voice = null;
+      //voice = null;
     }
   }
 
@@ -609,6 +707,7 @@ window.onload = function () {
   effects['Filter1'].bypass(true);
   effects['Filter2'] = new Filter(ctx);
   effects['Filter2'].bypass(true);
+  effects['Envelope'] = new Envelope(ctx);
 };
 //Create global effects function
 function createEffects() {}
@@ -656,6 +755,7 @@ function initPatch() {
 function initSynth() {
   var oscProto;
   var filterProto;
+  var envelopeProto;
 
   //Oscillator html rendering
   oscProto = Object.create(HTMLElement.prototype);
@@ -862,5 +962,69 @@ function initSynth() {
     console.log('Filter created');
   };
   document.registerElement('x-filter', { prototype: filterProto });
+
+  //Envelope
+  envelopeProto = Object.create(HTMLElement.prototype);
+  envelopeProto.createdCallback = function () {
+    var attackTimeControl = HtmlControl.createSlider({
+      id: this.id + '_attackTime',
+      labelText: 'Attack time',
+      min: 0,
+      max: 4,
+      step: 0.01,
+      value: patch.getParameter(this.id + '_attackTime'),
+      advanced: true
+    });
+
+    var decayTimeControl = HtmlControl.createSlider({
+      id: this.id + '_decayTime',
+      labelText: 'Decay time',
+      min: 0,
+      max: 4,
+      step: 0.01,
+      value: patch.getParameter(this.id + '_decayTime'),
+      advanced: true
+    });
+
+    var sustainTimeControl = HtmlControl.createSlider({
+      id: this.id + '_sustainLevel',
+      labelText: 'Sustain level',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_sustainLevel'),
+      advanced: true
+    });
+
+    var releaseTimeControl = HtmlControl.createSlider({
+      id: this.id + '_releaseTime',
+      labelText: 'Release time',
+      min: 0,
+      max: 4,
+      step: 0.01,
+      value: patch.getParameter(this.id + '_releaseTime'),
+      advanced: true
+    });
+    //attack
+    this.appendChild(attackTimeControl.label);
+    this.appendChild(attackTimeControl.slider);
+    this.appendChild(attackTimeControl.valueIndicator);
+
+    //decay
+    this.appendChild(decayTimeControl.label);
+    this.appendChild(decayTimeControl.slider);
+    this.appendChild(decayTimeControl.valueIndicator);
+
+    //sustain
+    this.appendChild(sustainTimeControl.label);
+    this.appendChild(sustainTimeControl.slider);
+    this.appendChild(sustainTimeControl.valueIndicator);
+
+    //release
+    this.appendChild(releaseTimeControl.label);
+    this.appendChild(releaseTimeControl.slider);
+    this.appendChild(releaseTimeControl.valueIndicator);
+  };
+  document.registerElement('x-envelope', { prototype: envelopeProto });
 }
 //# sourceMappingURL=all.js.map

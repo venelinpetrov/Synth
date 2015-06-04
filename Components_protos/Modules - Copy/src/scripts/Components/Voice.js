@@ -3,6 +3,7 @@ class Voice {
     this.note = note;
     this.ctx = ctx;
     this.oscillators = [];
+    this.endTime = 0;
   }
 
   start(velocity) {
@@ -10,10 +11,11 @@ class Voice {
     var vco2;
     var vcf1 = effects['Filter1'];
     var vcf2 = effects['Filter2'];
+    var vcoEnvelope = effects['Envelope'];
+
     if(patch.getParameter('Osc1_on') == true) {
       vco1 = new Oscillator(this.ctx);
-      //vcf1 = new Filter(this.ctx);
-
+      //vco1Envelope = new Envelope(this.ctx);
       vco1.setType(patch.getParameter('Osc1_wave'));
       vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
       vco1.setFrequency(equalTempered440[this.note]);//sdfsdf
@@ -26,6 +28,15 @@ class Voice {
       vco1.out1.connect(vcf1.input);
       vco1.out2.connect(vcf2.input);
 
+      //envelope
+      this.endTime = vcoEnvelope.setADSR(vco1.vca.gain, {
+        attackTime: +patch.getParameter('Envelope_attackTime'),
+        decayTime: +patch.getParameter('Envelope_decayTime'),
+        sustainLevel: +patch.getParameter('Envelope_sustainLevel'),
+        releaseTime: +patch.getParameter('Envelope_releaseTime')
+      });
+
+      //track active oscillators, so they can be stoped after that
       this.oscillators.push(vco1);
     }
 
@@ -42,17 +53,33 @@ class Voice {
       vco2.out1.connect(vcf1.input);
       vco2.out2.connect(vcf2.input);
 
+      //envelope
+      this.endTime = vcoEnvelope.setADSR(vco2.vca.gain, {
+        attackTime: +patch.getParameter('Envelope_attackTime'),
+        decayTime: +patch.getParameter('Envelope_decayTime'),
+        sustainLevel: +patch.getParameter('Envelope_sustainLevel'),
+        releaseTime: +patch.getParameter('Envelope_releaseTime')
+      });
+
+      //track active oscillators, so they can be stoped after that
       this.oscillators.push(vco2);
     }
 
     vcf1.connect(this.ctx.destination);
     vcf2.connect(this.ctx.destination);
-    console.log(this.oscillators)
   }
 
-  stop(time=0) {
-    this.oscillators.forEach(function(oscillators){
-      oscillators.stop(time);
+  stop() {
+    this.oscillators.forEach((oscillator) => {
+      //release stage of the envelope
+      oscillator.vca.gain.setValueAtTime(oscillator.vca.gain.value, this.ctx.currentTime); //hold the sustain gain (preserve from peaking noises and sound flikering)
+      oscillator.vca.gain.linearRampToValueAtTime(0, this.ctx.currentTime + this.endTime); //lineary tend to 0 at the specified rate
+
+      oscillator.stop(this.ctx.currentTime + this.endTime); //osc stops when note is dead
     });
+  }
+
+  getEndTime() {
+    return this.endTime;
   }
 }

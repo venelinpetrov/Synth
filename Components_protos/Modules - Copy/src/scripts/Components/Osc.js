@@ -18,6 +18,8 @@ class Oscillator {
     //connect vca to f1Gain and f2Gain
     this.vca.connect(this.f1Gain);
     this.vca.connect(this.f2Gain);
+
+
   }
   //get/set wave type
   getType() {
@@ -33,7 +35,7 @@ class Oscillator {
   }
   setGain(value) {
     this.vca.gain.value = value;
-    this.vca.gain.setTargetAtTime(0, this.ctx.currentTime, .5);
+    //this.vca.gain.setTargetAtTime(0, this.ctx.currentTime, .5);
   }
 
   //get/set pitch
@@ -68,6 +70,9 @@ class Oscillator {
     return this.f2Gain;
   }
 
+  get mainVca() {
+    return this.vca;
+  }
   //connect vca->external_node
   // connect(node) {
   //   this.vca.connect(node);

@@ -37,11 +37,12 @@
         console.log('-->',ctx)
         voice = new Voice(note, ctx);
         active_voices[note] = voice;
+        console.log(active_voices);
         voice.start(velocity);
       } else {
-        active_voices[note].stop(ctx.currentTime + 3);
+        active_voices[note].stop();
         delete active_voices[note];
-        voice = null;
+        //voice = null;
       }
     }
 
@@ -56,6 +57,7 @@
     effects['Filter1'].bypass(true);
     effects['Filter2'] = new Filter(ctx);
     effects['Filter2'].bypass(true);
+    effects['Envelope'] = new Envelope(ctx);
   }
   //Create global effects function
   function createEffects() {
@@ -105,6 +107,7 @@
   function initSynth() {
     var oscProto;
     var filterProto;
+    var envelopeProto;
 
     //Oscillator html rendering
     oscProto = Object.create(HTMLElement.prototype);
@@ -317,4 +320,68 @@
       console.log('Filter created');
     };
     document.registerElement('x-filter', {prototype: filterProto});
+
+    //Envelope
+    envelopeProto = Object.create(HTMLElement.prototype);
+    envelopeProto.createdCallback = function() {
+      var attackTimeControl = HtmlControl.createSlider({
+        id: this.id + '_attackTime',
+        labelText: 'Attack time',
+        min: 0,
+        max: 4,
+        step: .01,
+        value: patch.getParameter(this.id + '_attackTime'),
+        advanced: true
+      });
+
+      var decayTimeControl = HtmlControl.createSlider({
+        id: this.id + '_decayTime',
+        labelText: 'Decay time',
+        min: 0,
+        max: 4,
+        step: .01,
+        value: patch.getParameter(this.id + '_decayTime'),
+        advanced: true
+      });
+
+      var sustainTimeControl = HtmlControl.createSlider({
+        id: this.id + '_sustainLevel',
+        labelText: 'Sustain level',
+        min: 0,
+        max: 1,
+        step: .1,
+        value: patch.getParameter(this.id + '_sustainLevel'),
+        advanced: true
+      });
+
+      var releaseTimeControl = HtmlControl.createSlider({
+        id: this.id + '_releaseTime',
+        labelText: 'Release time',
+        min: 0,
+        max: 4,
+        step: .01,
+        value: patch.getParameter(this.id + '_releaseTime'),
+        advanced: true
+      });
+      //attack
+      this.appendChild(attackTimeControl.label);
+      this.appendChild(attackTimeControl.slider);
+      this.appendChild(attackTimeControl.valueIndicator);
+
+      //decay
+      this.appendChild(decayTimeControl.label);
+      this.appendChild(decayTimeControl.slider);
+      this.appendChild(decayTimeControl.valueIndicator);
+
+      //sustain
+      this.appendChild(sustainTimeControl.label);
+      this.appendChild(sustainTimeControl.slider);
+      this.appendChild(sustainTimeControl.valueIndicator);
+
+      //release
+      this.appendChild(releaseTimeControl.label);
+      this.appendChild(releaseTimeControl.slider);
+      this.appendChild(releaseTimeControl.valueIndicator);
+    };
+    document.registerElement('x-envelope', {prototype: envelopeProto});
   }

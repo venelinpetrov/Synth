@@ -13,6 +13,11 @@ class Patch {
       'Osc2_gain': .5,
       'Osc2_F1F2': .5,
 
+      'Envelope_attackTime': 0,
+      'Envelope_decayTime': 0,
+      'Envelope_sustainLevel': .7,
+      'Envelope_releaseTime': .06,
+
       'Filter1_on': false,
       'Filter1_type': 'lowpass',
       'Filter1_frequency': 300,
