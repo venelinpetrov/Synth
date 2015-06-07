@@ -1,13 +1,52 @@
 <!doctype html>
-
 <html>
-<head>
-	<title>delay</title>
-	<script src="delay-compiled.js"></script>
-</head>
-
-
-<body>
+	<head>
+		<title>delay</title>
+		
+	</head>
+	<body>
+		
+		
+		<script>
+			var audioContext = new AudioContext()
 	
-</body>
+			// add effects here
+			
+			
+			// ^^^^^^^^^^^^^^^^^
+			
+			play(0, 3, 0.1)
+			
+			function play(startAfter, pitch, duration) {
+			  var time = audioContext.currentTime + startAfter
+			
+			  var oscillator = audioContext.createOscillator();
+			  var input = audioContext.createGain()
+			  var feedback = audioContext.createGain()
+			  var delay = audioContext.createDelay()
+			  var output = audioContext.createGain()
+			  
+			  
+			  delay.delayTime.value = .2;
+			  feedback.gain.value = .6;
+			  
+			  
+			
+			  oscillator.type = 'sine';
+			  oscillator.detune.value = pitch * 100 ;
+			
+			  oscillator.connect(input);
+			  input.connect(output);
+			  output.connect(audioContext.destination);
+			  input.connect(delay);
+			  delay.connect(feedback);
+			  feedback.connect(output);
+			  feedback.connect(delay);
+			  
+			  oscillator.start(time);
+			  oscillator.stop(time + duration);
+			}
+		</script>
+	</body>
+
 </html>

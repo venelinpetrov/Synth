@@ -151,23 +151,14 @@ var Filter = (function () {
       }
     }
   }, {
-    key: 'getType',
-
-    //get/set type
-    value: function getType() {
-      return this.vcf.type;
-    }
-  }, {
     key: 'setType',
     value: function setType(value) {
       this.vcf.type = value;
     }
   }, {
-    key: 'getFrequency',
-
-    //get/set frequency
-    value: function getFrequency() {
-      return this.vcf.frequency.value;
+    key: 'frequencyAudioParam',
+    get: function () {
+      return this.vcf.frequency;
     }
   }, {
     key: 'setFrequency',
@@ -175,11 +166,9 @@ var Filter = (function () {
       this.vcf.frequency.value = value;
     }
   }, {
-    key: 'getGain',
-
-    //get/set gain
-    value: function getGain() {
-      return this.vcf.gain.value;
+    key: 'gainAudioParam',
+    get: function () {
+      return this.vcf.gain;
     }
   }, {
     key: 'setGain',
@@ -187,11 +176,9 @@ var Filter = (function () {
       this.vcf.gain.value = value;
     }
   }, {
-    key: 'getQ',
-
-    //get/set Q
-    value: function getQ() {
-      return thid.vcf.Q.value;
+    key: 'QAudioParam',
+    get: function () {
+      return this.vcf.Q;
     }
   }, {
     key: 'setQ',
@@ -201,7 +188,7 @@ var Filter = (function () {
   }, {
     key: 'setDryWet',
 
-    //get/set dry/wet
+    //set dry/wet
     //value=1 means 100% wet signal
     value: function setDryWet(value) {
       this.wetGain.gain.value = value;
@@ -364,6 +351,80 @@ var HtmlControl = (function () {
   return HtmlControl;
 })();
 
+var LFO = (function () {
+  function LFO(ctx) {
+    _classCallCheck(this, LFO);
+
+    this.ctx = ctx;
+
+    this.rate = 0;
+    this.amplitude = 0;
+    this.lfo = ctx.createOscillator();
+    //this.audioParam = null;
+    this.lfoAmplitude = this.ctx.createGain();
+    //this.lfo.connect(this.lfoAmplitude);
+  }
+
+  _createClass(LFO, [{
+    key: 'modulate',
+
+    //amplitude is in range [0,1], 1 means 100% of the AudioParam is added/subtracted with lfo
+    value: function modulate(audioParams) {
+      this.lfo.frequency.value = this.rate;
+
+      for (var i = 0; i < audioParams.length; i++) {
+        var lfoAmplitude = this.ctx.createGain();
+        this.lfo.connect(lfoAmplitude);
+        lfoAmplitude.gain.value = audioParams[i].value * this.amplitude;
+        lfoAmplitude.connect(audioParams[i]);
+      }
+    }
+  }, {
+    key: 'setAmplitude',
+
+    //audioParam should implement AudioParam interface
+    value: function setAmplitude(value) {
+      this.amplitude = value;
+    }
+  }, {
+    key: 'setRate',
+
+    //rate is the lfo frequency
+    value: function setRate(value) {
+      this.rate = value;
+    }
+  }, {
+    key: 'start',
+    value: function start() {
+      this.lfo.start();
+    }
+  }, {
+    key: 'connect',
+
+    //TODO: a separate gain (lfoAmplitude) should be created for each AudioParam since it depends on
+    //AudioParam's value. Otherwise the lfoAmplitude is overwritten when multiple AudioParams
+    //are being modulated. This chane will affect the .disconnect() method too!
+    value: function connect(audioParam) {
+      this.lfo.frequency.value = this.rate;
+      this.lfoAmplitude.gain.value = audioParam.value * this.amplitude;
+      this.lfo.connect(this.lfoAmplitude);
+      this.lfoAmplitude.connect(audioParam);
+    }
+  }, {
+    key: 'disconnect',
+    value: function disconnect(audioParam) {
+      try {
+        this.lfoAmplitude.disconnect(audioParam);
+      } catch (e) {
+        console.log(e);
+        console.log(audioParam, 'already disconnected');
+      }
+    }
+  }]);
+
+  return LFO;
+})();
+
 var MasterAmp = (function () {
   function MasterAmp(ctx) {
     _classCallCheck(this, MasterAmp);
@@ -465,6 +526,11 @@ var Oscillator = (function () {
       this.vco.detune.value = value * 100; //detune is in cents (100cent = 1 semi-tone), but values come fractional, so multiply by 100
     }
   }, {
+    key: 'pitchAudioParam',
+    get: function () {
+      return this.vco.detune;
+    }
+  }, {
     key: 'getFrequency',
 
     //get/set frequency
@@ -501,6 +567,11 @@ var Oscillator = (function () {
     key: 'mainVca',
     get: function () {
       return this.vca;
+    }
+  }, {
+    key: 'vcaAudioParam',
+    get: function () {
+      return this.vca.gain;
     }
   }, {
     key: 'start',
@@ -547,6 +618,22 @@ var Patch = (function () {
       'Osc2_pitch': 0,
       'Osc2_gain': 0.5,
       'Osc2_F1F2': 0.5,
+
+      'FLO1_Osc1_gain': false,
+      'FLO1_Osc2_gain': false,
+      'FLO1_Osc1_pitch': false,
+      'FLO1_Osc2_pitch': false,
+      'LFO1_amplitude': 0,
+      'LFO1_rate': 0,
+
+      'FLO2_Filter1_frequency': false,
+      'FLO2_Filter2_frequency': false,
+      'FLO2_Filter1_gain': false,
+      'FLO2_Filter2_gain': false,
+      'FLO2_Filter1_Q': false,
+      'FLO2_Filter1_Q': false,
+      'LFO2_amplitude': 0,
+      'LFO2_rate': 0,
 
       'Envelope_attackTime': 0,
       'Envelope_decayTime': 0,
@@ -615,21 +702,60 @@ var Voice = (function () {
       var vcf1 = effects['Filter1'];
       var vcf2 = effects['Filter2'];
       var vcoEnvelope = effects['Envelope'];
+      var lfo1 = effects['LFO1'];
+      var lfo2 = effects['LFO2'];
+      var oscModulatedParams = [];
+      var filterModulatedParams = [];
       var masterAmp = effects['MasterAmp'];
+      if (patch.getParameter('FLO2_Filter1_frequency')) {
+        lfo2.connect(vcf1.frequencyAudioParam);
+      } else {
+        lfo2.disconnect(vcf1.frequencyAudioParam);
+      }
+      if (patch.getParameter('FLO2_Filter1_gain')) {
+        lfo2.connect(vcf1.gainAudioParam);
+      } else {
+        lfo2.disconnect(vcf1.gainAudioParam);
+      }
+      if (patch.getParameter('FLO2_Filter1_Q')) {
+        lfo2.connect(vcf1.QAudioParam);
+      } else {
+        lfo2.disconnect(vcf1.QAudioParam);
+      }
+      if (patch.getParameter('FLO2_Filter2_frequency')) {
+        lfo2.connect(vcf2.frequencyAudioParam);
+      } else {
+        lfo2.disconnect(vcf2.frequencyAudioParam);
+      }
+      if (patch.getParameter('FLO2_Filter2_gain')) {
+        lfo2.connect(vcf2.gainAudioParam);
+      } else {
+        lfo2.disconnect(vcf2.gainAudioParam);
+      }
+      if (patch.getParameter('FLO2_Filter2_Q')) {
+        lfo2.connect(vcf2.QAudioParam);
+      } else {
+        lfo2.disconnect(vcf2.QAudioParam);
+      }
 
       if (patch.getParameter('Osc1_on') == true) {
         vco1 = new Oscillator(this.ctx);
         //vco1Envelope = new Envelope(this.ctx);
         vco1.setType(patch.getParameter('Osc1_wave'));
         vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
-        vco1.setFrequency(equalTempered440[this.note]); //sdfsdf
+        vco1.setFrequency(equalTempered440[this.note]);
         vco1.setPitch(+patch.getParameter('Osc1_pitch'));
-        vco1.start();
 
-        //connect
-        vco1.setFilterCrossfader(+patch.getParameter('Osc1_F1F2'));
-        vco1.out1.connect(vcf1.input);
-        vco1.out2.connect(vcf2.input);
+        //lfo1
+        if (patch.getParameter('FLO1_Osc1_gain')) {
+          oscModulatedParams.push(vco1.vcaAudioParam);
+        }
+        if (patch.getParameter('FLO1_Osc1_pitch')) {
+          oscModulatedParams.push(vco1.pitchAudioParam);
+        }
+        if (oscModulatedParams.length != 0) {
+          lfo1.modulate(oscModulatedParams);
+        }
 
         //envelope
         this.endTime = vcoEnvelope.setADSR(vco1.vca.gain, {
@@ -638,6 +764,12 @@ var Voice = (function () {
           sustainLevel: +patch.getParameter('Envelope_sustainLevel'),
           releaseTime: +patch.getParameter('Envelope_releaseTime')
         });
+
+        //connect
+        vco1.setFilterCrossfader(+patch.getParameter('Osc1_F1F2'));
+        vco1.out1.connect(vcf1.input);
+        vco1.out2.connect(vcf2.input);
+        vco1.start();
 
         //track active oscillators, so they can be stoped after that
         this.oscillators.push(vco1);
@@ -649,13 +781,17 @@ var Voice = (function () {
         vco2.setGain(patch.getParameter('Osc2_gain') * velocity);
         vco2.setFrequency(equalTempered440[this.note]); //sdfsdf
         vco2.setPitch(+patch.getParameter('Osc2_pitch'));
-        vco2.start();
 
-        //connect
-        vco2.setFilterCrossfader(+patch.getParameter('Osc2_F1F2'));
-        vco2.out1.connect(vcf1.input);
-        vco2.out2.connect(vcf2.input);
-
+        //lfo1
+        if (patch.getParameter('FLO1_Osc2_gain')) {
+          oscModulatedParams.push(vco2.vcaAudioParam);
+        }
+        if (patch.getParameter('FLO1_Osc2_pitch')) {
+          oscModulatedParams.push(vco2.pitchAudioParam);
+        }
+        if (oscModulatedParams.length != 0) {
+          lfo1.modulate(oscModulatedParams);
+        }
         //envelope
         this.endTime = vcoEnvelope.setADSR(vco2.vca.gain, {
           attackTime: +patch.getParameter('Envelope_attackTime'),
@@ -664,14 +800,18 @@ var Voice = (function () {
           releaseTime: +patch.getParameter('Envelope_releaseTime')
         });
 
+        //connect
+        vco2.setFilterCrossfader(+patch.getParameter('Osc2_F1F2'));
+        vco2.out1.connect(vcf1.input);
+        vco2.out2.connect(vcf2.input);
+        vco2.start();
         //track active oscillators, so they can be stoped after that
         this.oscillators.push(vco2);
       }
 
+      console.log(filterModulatedParams);
       vcf1.connect(masterAmp.input);
       vcf2.connect(masterAmp.input);
-      masterAmp.setPan(patch.getParameter('Amp_pan'));
-      masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
     }
   }, {
     key: 'stop',
@@ -679,7 +819,7 @@ var Voice = (function () {
       var _this = this;
 
       this.oscillators.forEach(function (oscillator) {
-        //release stage of the envelope
+        //release stage of the envelope <-- ??move this to the Envelope class
         oscillator.vca.gain.setValueAtTime(oscillator.vca.gain.value, _this.ctx.currentTime); //hold the sustain gain (preserve from peaking noises and sound flikering)
         oscillator.vca.gain.linearRampToValueAtTime(0, _this.ctx.currentTime + _this.endTime); //lineary tend to 0 at the specified rate
 
@@ -753,11 +893,20 @@ window.onload = function () {
   effects['Filter1'].bypass(true);
   effects['Filter2'] = new Filter(ctx);
   effects['Filter2'].bypass(true);
+
   effects['Envelope'] = new Envelope(ctx);
   effects['MasterAmp'] = new MasterAmp(ctx);
+
+  effects['LFO1'] = new LFO(ctx);
+  effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
+  effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
+  effects['LFO1'].start();
+
+  effects['LFO2'] = new LFO(ctx);
+  effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
+  effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
+  effects['LFO2'].start();
 };
-//Create global effects function
-function createEffects() {}
 
 //Initialize patch function
 function initPatch() {
@@ -769,9 +918,16 @@ function initPatch() {
     v.addEventListener('input', function (e) {
       var vcf1 = effects['Filter1'];
       var vcf2 = effects['Filter2'];
+
+      var lfo1 = effects['LFO1'];
+      var lfo2 = effects['LFO2'];
+
+      var masterAmp = effects['MasterAmp'];
+
       patch.setParameter(e.target.id, e.target.value);
       console.log(patch);
 
+      //filters
       vcf1.setType(patch.getParameter('Filter1_type'));
       vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
       vcf1.setGain(patch.getParameter('Filter1_gain'));
@@ -783,6 +939,18 @@ function initPatch() {
       vcf2.setGain(patch.getParameter('Filter2_gain'));
       vcf2.setQ(patch.getParameter('Filter2_Q'));
       vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
+
+      //LFO1 (Oscillators)
+      lfo1.setAmplitude(+patch.getParameter('LFO1_amplitude'));
+      lfo1.setRate(+patch.getParameter('LFO1_rate'));
+
+      //LFO2 (Filters)
+      lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
+      lfo2.setRate(+patch.getParameter('LFO2_rate'));
+
+      //master amp
+      masterAmp.setPan(patch.getParameter('Amp_pan'));
+      masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
     }, false);
   });
 
@@ -790,9 +958,7 @@ function initPatch() {
   [].forEach.call(powers, function (v) {
     v.checked = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('change', function (e) {
-
       patch.setParameter(e.target.id, e.target.checked);
-
       console.log(patch);
     }, false);
   });
@@ -803,6 +969,8 @@ function initSynth() {
   var oscProto;
   var filterProto;
   var envelopeProto;
+  var oscLFOProto;
+  var filterLFOProto;
   var ampProto;
 
   //Oscillator html rendering
@@ -1074,6 +1242,92 @@ function initSynth() {
     this.appendChild(releaseTimeControl.valueIndicator);
   };
   document.registerElement('x-envelope', { prototype: envelopeProto });
+
+  //LFO1
+  oscLFOProto = Object.create(HTMLElement.prototype);
+  oscLFOProto.createdCallback = function () {
+    var amplitudeControl = HtmlControl.createSlider({
+      id: this.id + '_amplitude',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_amplitude'),
+      advanced: false
+    });
+    var amplitudeLabel;
+
+    var rateControl = HtmlControl.createSlider({
+      id: this.id + '_rate',
+      min: 0,
+      max: 20,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_rate'),
+      advanced: false
+    });
+    var rateLabel;
+    var routingTable;
+    //amplitude
+    amplitudeLabel = document.createElement('label');
+    amplitudeLabel.innerHTML = 'Amplitude';
+    this.appendChild(amplitudeLabel);
+    this.appendChild(amplitudeControl.slider);
+
+    //rate
+    rateLabel = document.createElement('label');
+    rateLabel.innerHTML = 'Rate';
+    this.appendChild(rateLabel);
+    this.appendChild(rateControl.slider);
+
+    //routing table
+    routingTable = document.createElement('table');
+    //lazy render - maybe fix later
+    routingTable.innerHTML = '<tr><td></td><th>Osc 1</th><th>Osc 2</th></tr><tr><th>Amp</th><td><input type="checkbox" id="FLO1_Osc1_gain" class="power"></td><td><input type="checkbox" id="FLO1_Osc2_gain" class="power"></td></tr><tr><th>Pitch</th><td><input type="checkbox" id="FLO1_Osc1_pitch" class="power"></td><td><input type="checkbox" id="FLO1_Osc2_pitch" class="power"></td></tr>';
+    this.appendChild(routingTable);
+  };
+  document.registerElement('x-osc-lfo', { prototype: oscLFOProto });
+
+  //LFO2
+  filterLFOProto = Object.create(HTMLElement.prototype);
+  filterLFOProto.createdCallback = function () {
+    var amplitudeControl = HtmlControl.createSlider({
+      id: this.id + '_amplitude',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_amplitude'),
+      advanced: false
+    });
+    var amplitudeLabel;
+
+    var rateControl = HtmlControl.createSlider({
+      id: this.id + '_rate',
+      min: 0,
+      max: 20,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_rate'),
+      advanced: false
+    });
+    var rateLabel;
+    var routingTable;
+    //amplitude
+    amplitudeLabel = document.createElement('label');
+    amplitudeLabel.innerHTML = 'Amplitude';
+    this.appendChild(amplitudeLabel);
+    this.appendChild(amplitudeControl.slider);
+
+    //rate
+    rateLabel = document.createElement('label');
+    rateLabel.innerHTML = 'Rate';
+    this.appendChild(rateLabel);
+    this.appendChild(rateControl.slider);
+
+    //routing table
+    routingTable = document.createElement('table');
+    //lazy render - maybe fix later
+    routingTable.innerHTML = '<tr><td></td><th>Filter 1</th><th>Filter 2</th></tr><tr><th>Frequency</th><td><input type="checkbox" id="FLO2_Filter1_frequency" class="power"></td><td><input type="checkbox" id="FLO2_Filter2_frequency" class="power"></td></tr><tr><th>Gain</th><td><input type="checkbox" id="FLO2_Filter1_gain" class="power"></td><td><input type="checkbox" id="FLO2_Filter2_gain" class="power"></td></tr><tr><th>Q</th><td><input type="checkbox" id="FLO2_Filter1_Q" class="power"></td><td><input type="checkbox" id="FLO2_Filter1_Q" class="power"></td></tr>';
+    this.appendChild(routingTable);
+  };
+  document.registerElement('x-filter-lfo', { prototype: filterLFOProto });
 
   //Amplifier
   ampProto = Object.create(HTMLElement.prototype);

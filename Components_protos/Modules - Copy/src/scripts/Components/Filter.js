@@ -80,39 +80,35 @@ class Filter {
     }
 
   }
-  //get/set type
-  getType() {
-    return this.vcf.type;
-  }
+
   setType(value) {
     this.vcf.type = value;
   }
 
-  //get/set frequency
-  getFrequency() {
-    return this.vcf.frequency.value;
+  get frequencyAudioParam() {
+    return this.vcf.frequency;
   }
+
   setFrequency(value) {
     this.vcf.frequency.value = value;
   }
 
-  //get/set gain
-  getGain() {
-    return this.vcf.gain.value;
+  get gainAudioParam() {
+    return this.vcf.gain;
   }
+
   setGain(value) {
     this.vcf.gain.value = value;
   }
 
-  //get/set Q
-  getQ() {
-    return thid.vcf.Q.value;
+  get QAudioParam() {
+    return this.vcf.Q;
   }
   setQ(value) {
     this.vcf.Q.value = value;
   }
 
-  //get/set dry/wet
+  //set dry/wet
   //value=1 means 100% wet signal
   setDryWet(value) {
     this.wetGain.gain.value = value;

@@ -9,6 +9,9 @@
 		[type="range"] {
 			vertical-align: middle;
 		}
+		th {
+			text-align: left;
+		}
 	</style>
 </head>
 <body>
@@ -50,6 +53,20 @@
 			Amplifier
 		</legend>
 		<x-amp id="Amp"></x-amp>
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			LFO 1
+		</legend>
+		<x-osc-lfo id="LFO1"></x-osc-lfo>
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			LFO 2 - Experimental
+		</legend>
+		<x-filter-lfo id="LFO2"></x-filter-lfo>
 	</fieldset>
 </body>
 </html>

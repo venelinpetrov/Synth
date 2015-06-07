@@ -16,6 +16,22 @@ class Patch {
       'Osc2_gain': .5,
       'Osc2_F1F2': .5,
 
+      'FLO1_Osc1_gain': false,
+    	'FLO1_Osc2_gain': false,
+    	'FLO1_Osc1_pitch': false,
+    	'FLO1_Osc2_pitch': false,
+      'LFO1_amplitude': 0,
+      'LFO1_rate': 0,
+
+      'FLO2_Filter1_frequency': false,
+    	'FLO2_Filter2_frequency': false,
+    	'FLO2_Filter1_gain': false,
+    	'FLO2_Filter2_gain': false,
+      'FLO2_Filter1_Q': false,
+    	'FLO2_Filter1_Q': false,
+      'LFO2_amplitude': 0,
+      'LFO2_rate': 0,
+
       'Envelope_attackTime': 0,
       'Envelope_decayTime': 0,
       'Envelope_sustainLevel': .7,
@@ -34,7 +50,7 @@ class Patch {
       'Filter2_Q': 1,
       'Filter2_gain': 0,
       'Filter2_dryWet': .5
-    }
+    };
   }
 
   setParameter(parameter, value) {

@@ -45,6 +45,9 @@ class Oscillator {
   setPitch(value) {
     this.vco.detune.value = value  * 100; //detune is in cents (100cent = 1 semi-tone), but values come fractional, so multiply by 100
   }
+  get pitchAudioParam() {
+    return this.vco.detune;
+  }
 
   //get/set frequency
   getFrequency() {
@@ -72,6 +75,9 @@ class Oscillator {
 
   get mainVca() {
     return this.vca;
+  }
+  get vcaAudioParam() {
+    return this.vca.gain;
   }
   //connect vca->external_node
   // connect(node) {

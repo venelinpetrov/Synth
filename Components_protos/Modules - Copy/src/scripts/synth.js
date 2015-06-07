@@ -57,13 +57,21 @@
     effects['Filter1'].bypass(true);
     effects['Filter2'] = new Filter(ctx);
     effects['Filter2'].bypass(true);
+
     effects['Envelope'] = new Envelope(ctx);
     effects['MasterAmp'] = new MasterAmp(ctx);
-  }
-  //Create global effects function
-  function createEffects() {
 
-  }
+    effects['LFO1'] = new LFO(ctx);
+    effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
+    effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
+    effects['LFO1'].start();
+
+    effects['LFO2'] = new LFO(ctx);
+    effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
+    effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
+    effects['LFO2'].start();
+
+  };
 
   //Initialize patch function
   function initPatch() {
@@ -75,9 +83,16 @@
       v.addEventListener('input', function (e){
         var vcf1 = effects['Filter1'];
         var vcf2 = effects['Filter2'];
+
+        var lfo1 = effects['LFO1'];
+        var lfo2 = effects['LFO2'];
+
+        var masterAmp = effects['MasterAmp'];
+
         patch.setParameter(e.target.id, e.target.value);
         console.log(patch);
 
+        //filters
         vcf1.setType(patch.getParameter('Filter1_type'));
         vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
         vcf1.setGain(patch.getParameter('Filter1_gain'));
@@ -89,6 +104,18 @@
         vcf2.setGain(patch.getParameter('Filter2_gain'));
         vcf2.setQ(patch.getParameter('Filter2_Q'));
         vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
+
+        //LFO1 (Oscillators)
+        lfo1.setAmplitude(+patch.getParameter('LFO1_amplitude'));
+        lfo1.setRate(+patch.getParameter('LFO1_rate'));
+
+        //LFO2 (Filters)
+        lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
+        lfo2.setRate(+patch.getParameter('LFO2_rate'));
+
+        //master amp
+        masterAmp.setPan(patch.getParameter('Amp_pan'));
+        masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
       }, false);
     });
 
@@ -96,9 +123,7 @@
     [].forEach.call(powers, function(v){
       v.checked = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('change', function (e){
-
         patch.setParameter(e.target.id, e.target.checked);
-
         console.log(patch);
       }, false);
     });
@@ -109,6 +134,8 @@
     var oscProto;
     var filterProto;
     var envelopeProto;
+    var oscLFOProto;
+    var filterLFOProto;
     var ampProto;
 
     //Oscillator html rendering
@@ -386,6 +413,92 @@
       this.appendChild(releaseTimeControl.valueIndicator);
     };
     document.registerElement('x-envelope', {prototype: envelopeProto});
+
+    //LFO1
+    oscLFOProto = Object.create(HTMLElement.prototype);
+    oscLFOProto.createdCallback = function() {
+      var amplitudeControl = HtmlControl.createSlider({
+        id: this.id + '_amplitude',
+        min: 0,
+        max: 1,
+        step: .1,
+        value: patch.getParameter(this.id + '_amplitude'),
+        advanced: false
+      });
+      var amplitudeLabel;
+
+      var rateControl = HtmlControl.createSlider({
+        id: this.id + '_rate',
+        min: 0,
+        max: 20,
+        step: .1,
+        value: patch.getParameter(this.id + '_rate'),
+        advanced: false
+      });
+      var rateLabel;
+      var routingTable;
+      //amplitude
+      amplitudeLabel = document.createElement('label');
+      amplitudeLabel.innerHTML = 'Amplitude';
+      this.appendChild(amplitudeLabel);
+      this.appendChild(amplitudeControl.slider);
+
+      //rate
+      rateLabel = document.createElement('label');
+      rateLabel.innerHTML = 'Rate';
+      this.appendChild(rateLabel);
+      this.appendChild(rateControl.slider);
+
+      //routing table
+      routingTable = document.createElement('table');
+      //lazy render - maybe fix later
+      routingTable.innerHTML = '<tr><td></td><th>Osc 1</th><th>Osc 2</th></tr><tr><th>Amp</th><td><input type="checkbox" id="FLO1_Osc1_gain" class="power"></td><td><input type="checkbox" id="FLO1_Osc2_gain" class="power"></td></tr><tr><th>Pitch</th><td><input type="checkbox" id="FLO1_Osc1_pitch" class="power"></td><td><input type="checkbox" id="FLO1_Osc2_pitch" class="power"></td></tr>'
+      this.appendChild(routingTable);
+    };
+    document.registerElement('x-osc-lfo', {prototype: oscLFOProto});
+
+    //LFO2
+    filterLFOProto = Object.create(HTMLElement.prototype);
+    filterLFOProto.createdCallback = function() {
+      var amplitudeControl = HtmlControl.createSlider({
+        id: this.id + '_amplitude',
+        min: 0,
+        max: 1,
+        step: .1,
+        value: patch.getParameter(this.id + '_amplitude'),
+        advanced: false
+      });
+      var amplitudeLabel;
+
+      var rateControl = HtmlControl.createSlider({
+        id: this.id + '_rate',
+        min: 0,
+        max: 20,
+        step: .1,
+        value: patch.getParameter(this.id + '_rate'),
+        advanced: false
+      });
+      var rateLabel;
+      var routingTable;
+      //amplitude
+      amplitudeLabel = document.createElement('label');
+      amplitudeLabel.innerHTML = 'Amplitude';
+      this.appendChild(amplitudeLabel);
+      this.appendChild(amplitudeControl.slider);
+
+      //rate
+      rateLabel = document.createElement('label');
+      rateLabel.innerHTML = 'Rate';
+      this.appendChild(rateLabel);
+      this.appendChild(rateControl.slider);
+
+      //routing table
+      routingTable = document.createElement('table');
+      //lazy render - maybe fix later
+      routingTable.innerHTML = '<tr><td></td><th>Filter 1</th><th>Filter 2</th></tr><tr><th>Frequency</th><td><input type="checkbox" id="FLO2_Filter1_frequency" class="power"></td><td><input type="checkbox" id="FLO2_Filter2_frequency" class="power"></td></tr><tr><th>Gain</th><td><input type="checkbox" id="FLO2_Filter1_gain" class="power"></td><td><input type="checkbox" id="FLO2_Filter2_gain" class="power"></td></tr><tr><th>Q</th><td><input type="checkbox" id="FLO2_Filter1_Q" class="power"></td><td><input type="checkbox" id="FLO2_Filter1_Q" class="power"></td></tr>'
+      this.appendChild(routingTable);
+    };
+    document.registerElement('x-filter-lfo', {prototype: filterLFOProto});
 
     //Amplifier
     ampProto = Object.create(HTMLElement.prototype);
