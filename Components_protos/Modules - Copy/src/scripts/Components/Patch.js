@@ -49,7 +49,12 @@ class Patch {
       'Filter2_frequency': 300,
       'Filter2_Q': 1,
       'Filter2_gain': 0,
-      'Filter2_dryWet': .5
+      'Filter2_dryWet': .5,
+
+      'Delay_on': false,
+      'Delay_delayTime': .2,
+      'Delay_feedback': .5,
+      'Delay_dryWet': .2
     };
   }
 

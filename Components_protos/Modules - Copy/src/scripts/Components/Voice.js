@@ -4,9 +4,11 @@ class Voice {
     this.ctx = ctx;
     this.oscillators = [];
     this.endTime = 0;
+    this.mergerGain =this.ctx.createGain();
   }
 
   start(velocity) {
+
     var vco1;
     var vco2;
     var vcf1 = effects['Filter1'];
@@ -15,8 +17,9 @@ class Voice {
     var lfo1 = effects['LFO1'];
     var lfo2 = effects['LFO2'];
     var oscModulatedParams = [];
-    var filterModulatedParams = [];
+    var delay = effects['Delay'];
     var masterAmp = effects['MasterAmp'];
+
     if(patch.getParameter('FLO2_Filter1_frequency')) {
       lfo2.connect(vcf1.frequencyAudioParam);
     } else {
@@ -117,15 +120,19 @@ class Voice {
       vco2.out1.connect(vcf1.input);
       vco2.out2.connect(vcf2.input);
       vco2.start();
+
       //track active oscillators, so they can be stoped after that
       this.oscillators.push(vco2);
     }
 
-
-console.log(filterModulatedParams);
-    vcf1.connect(masterAmp.input);
-    vcf2.connect(masterAmp.input);
-
+    //vcf1.connect(masterAmp.input);
+    //vcf2.connect(masterAmp.input);
+    vcf1.connect(delay.input);
+    vcf2.connect(delay.input);
+    //this.mergerGain.connect(delay.input);
+    delay.connect(masterAmp.input);
+    //delay.setFeedbackGain(0.3 * velocity);
+    console.log('delay ', delay);
   }
 
   stop() {

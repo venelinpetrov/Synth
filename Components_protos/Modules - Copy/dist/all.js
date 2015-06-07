@@ -1,3 +1,77 @@
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Delay = (function () {
+  function Delay(ctx) {
+    _classCallCheck(this, Delay);
+
+    this.ctx = ctx;
+
+    this.delay = this.ctx.createDelay();
+    this.inputGain = this.ctx.createGain();
+    this.feedbackGain = this.ctx.createGain();
+    this.outputGain = this.ctx.createGain();
+    this.dryGain = this.ctx.createGain();
+    this.wetGain = this.ctx.createGain();
+
+    this.inputGain.connect(this.dryGain);
+    this.dryGain.connect(this.outputGain);
+    this.inputGain.connect(this.wetGain);
+    this.wetGain.connect(this.delay);
+    this.delay.connect(this.feedbackGain);
+    this.feedbackGain.connect(this.outputGain);
+    this.feedbackGain.connect(this.delay);
+  }
+
+  _createClass(Delay, [{
+    key: 'input',
+    get: function () {
+      return this.inputGain;
+    }
+  }, {
+    key: 'connect',
+    value: function connect(node) {
+      this.outputGain.connect(node);
+    }
+  }, {
+    key: 'setDelayTime',
+    value: function setDelayTime(value) {
+      this.delay.delayTime.value = value;
+    }
+  }, {
+    key: 'setFeedbackGain',
+    value: function setFeedbackGain(value) {
+      this.feedbackGain.gain.value = value;
+    }
+  }, {
+    key: 'setDryWet',
+
+    //value is from 0 to 1, 1 means 100% wet
+    value: function setDryWet(value) {
+      this.wetGain.gain.value = value;
+      this.dryGain.gain.value = 1 - value;
+    }
+  }, {
+    key: 'bypass',
+    value: function bypass(bypassed) {
+      if (bypassed) {
+        this.inputGain.disconnect(this.dryGain);
+        this.inputGain.disconnect(this.wetGain);
+        this.inputGain.connect(this.outputGain);
+      } else {
+        this.inputGain.connect(this.dryGain);
+        this.inputGain.connect(this.wetGain);
+        this.inputGain.disconnect(this.outputGain);
+      }
+    }
+  }]);
+
+  return Delay;
+})();
+
 /**
   ADSR Envelope class
 
@@ -12,11 +86,6 @@
     -target parameter is the value the parameter will start changing to at the given time.
 
 */
-'use strict';
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Envelope = (function () {
   function Envelope(ctx) {
@@ -652,7 +721,12 @@ var Patch = (function () {
       'Filter2_frequency': 300,
       'Filter2_Q': 1,
       'Filter2_gain': 0,
-      'Filter2_dryWet': 0.5
+      'Filter2_dryWet': 0.5,
+
+      'Delay_on': false,
+      'Delay_delayTime': 0.2,
+      'Delay_feedback': 0.5,
+      'Delay_dryWet': 0.2
     };
   }
 
@@ -692,11 +766,13 @@ var Voice = (function () {
     this.ctx = ctx;
     this.oscillators = [];
     this.endTime = 0;
+    this.mergerGain = this.ctx.createGain();
   }
 
   _createClass(Voice, [{
     key: 'start',
     value: function start(velocity) {
+
       var vco1;
       var vco2;
       var vcf1 = effects['Filter1'];
@@ -705,8 +781,9 @@ var Voice = (function () {
       var lfo1 = effects['LFO1'];
       var lfo2 = effects['LFO2'];
       var oscModulatedParams = [];
-      var filterModulatedParams = [];
+      var delay = effects['Delay'];
       var masterAmp = effects['MasterAmp'];
+
       if (patch.getParameter('FLO2_Filter1_frequency')) {
         lfo2.connect(vcf1.frequencyAudioParam);
       } else {
@@ -805,13 +882,19 @@ var Voice = (function () {
         vco2.out1.connect(vcf1.input);
         vco2.out2.connect(vcf2.input);
         vco2.start();
+
         //track active oscillators, so they can be stoped after that
         this.oscillators.push(vco2);
       }
 
-      console.log(filterModulatedParams);
-      vcf1.connect(masterAmp.input);
-      vcf2.connect(masterAmp.input);
+      //vcf1.connect(masterAmp.input);
+      //vcf2.connect(masterAmp.input);
+      vcf1.connect(delay.input);
+      vcf2.connect(delay.input);
+      //this.mergerGain.connect(delay.input);
+      delay.connect(masterAmp.input);
+      //delay.setFeedbackGain(0.3 * velocity);
+      console.log('delay ', delay);
     }
   }, {
     key: 'stop',
@@ -906,6 +989,12 @@ window.onload = function () {
   effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
   effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
   effects['LFO2'].start();
+
+  effects['Delay'] = new Delay(ctx);
+  effects['Delay'].bypass(true);
+  effects['Delay'].setDelayTime(+patch.getParameter('Delay_delayTime'));
+  effects['Delay'].setFeedbackGain(+patch.getParameter('Delay_feedback'));
+  effects['Delay'].setDryWet(+patch.getParameter('Delay_dryWet'));
 };
 
 //Initialize patch function
@@ -921,6 +1010,8 @@ function initPatch() {
 
       var lfo1 = effects['LFO1'];
       var lfo2 = effects['LFO2'];
+
+      var delay = effects['Delay'];
 
       var masterAmp = effects['MasterAmp'];
 
@@ -948,6 +1039,11 @@ function initPatch() {
       lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
       lfo2.setRate(+patch.getParameter('LFO2_rate'));
 
+      //delay
+      delay.setDelayTime(+patch.getParameter('Delay_delayTime'));
+      delay.setFeedbackGain(+patch.getParameter('Delay_feedback'));
+      delay.setDryWet(+patch.getParameter('Delay_dryWet'));
+
       //master amp
       masterAmp.setPan(patch.getParameter('Amp_pan'));
       masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
@@ -971,6 +1067,7 @@ function initSynth() {
   var envelopeProto;
   var oscLFOProto;
   var filterLFOProto;
+  var delayProto;
   var ampProto;
 
   //Oscillator html rendering
@@ -1309,6 +1406,7 @@ function initSynth() {
     });
     var rateLabel;
     var routingTable;
+
     //amplitude
     amplitudeLabel = document.createElement('label');
     amplitudeLabel.innerHTML = 'Amplitude';
@@ -1328,6 +1426,79 @@ function initSynth() {
     this.appendChild(routingTable);
   };
   document.registerElement('x-filter-lfo', { prototype: filterLFOProto });
+
+  //Amplifier
+  delayProto = Object.create(HTMLElement.prototype);
+  delayProto.createdCallback = function () {
+    var delayTimeLabel;
+    var feedbackLabel;
+    var dryWetLabel;
+
+    var powerControl = HtmlControl.createCheckBox({
+      id: this.id + '_on',
+      labelText: 'On/Off: ',
+      className: 'power'
+    });
+
+    var delayTimeControl = HtmlControl.createSlider({
+      id: this.id + '_delayTime',
+      min: 0,
+      max: 5,
+      step: 0.01,
+      value: patch.getParameter(this.id + '_delayTime'),
+      advanced: false
+    });
+
+    var feedbackControl = HtmlControl.createSlider({
+      id: this.id + '_feedback',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_feedback'),
+      advanced: false
+    });
+
+    var dryWetControl = HtmlControl.createSlider({
+      id: this.id + '_dryWet',
+      min: 0,
+      max: 1,
+      step: 0.1,
+      value: patch.getParameter(this.id + '_dryWet'),
+      advanced: false
+    });
+
+    //power
+    this.appendChild(powerControl.label);
+    this.appendChild(powerControl.input);
+    powerControl.input.addEventListener('change', (function () {
+      if (patch.getParameter(this.id + '_on') == false) {
+        effects[this.id].bypass(false);
+        console.log('bypass on', this.id);
+      } else {
+        effects[this.id].bypass(true);
+        console.log('bypass off', this.id);
+      }
+    }).bind(this), false);
+
+    //delay time
+    delayTimeLabel = document.createElement('label');
+    delayTimeLabel.innerHTML = 'Delay time';
+    this.appendChild(delayTimeLabel);
+    this.appendChild(delayTimeControl.slider);
+
+    //feedback
+    feedbackLabel = document.createElement('label');
+    feedbackLabel.innerHTML = 'Feedback';
+    this.appendChild(feedbackLabel);
+    this.appendChild(feedbackControl.slider);
+
+    //dry/wet
+    dryWetLabel = document.createElement('label');
+    dryWetLabel.innerHTML = 'Dry/Wet';
+    this.appendChild(dryWetLabel);
+    this.appendChild(dryWetControl.slider);
+  };
+  document.registerElement('x-delay', { prototype: delayProto });
 
   //Amplifier
   ampProto = Object.create(HTMLElement.prototype);
