@@ -5,9 +5,7 @@ class LFO {
     this.rate = 0;
     this.amplitude = 0;
     this.lfo = ctx.createOscillator();
-    //this.audioParam = null;
     this.lfoAmplitude = this.ctx.createGain();
-    //this.lfo.connect(this.lfoAmplitude);
   }
 
 
@@ -32,10 +30,15 @@ class LFO {
     this.rate = value;
   }
 
+  //wave type/form
+  setType(value) {
+    this.lfo.type = value;
+  }
+
   start() {
     this.lfo.start();
   }
-  
+
   //TODO: a separate gain (lfoAmplitude) should be created for each AudioParam since it depends on
   //AudioParam's value. Otherwise the lfoAmplitude is overwritten when multiple AudioParams
   //are being modulated. This chane will affect the .disconnect() method too!

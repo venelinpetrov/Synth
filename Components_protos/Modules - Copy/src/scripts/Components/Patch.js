@@ -20,6 +20,7 @@ class Patch {
     	'FLO1_Osc2_gain': false,
     	'FLO1_Osc1_pitch': false,
     	'FLO1_Osc2_pitch': false,
+      'LFO1_wave': 'square',
       'LFO1_amplitude': 0,
       'LFO1_rate': 0,
 
@@ -29,6 +30,7 @@ class Patch {
     	'FLO2_Filter2_gain': false,
       'FLO2_Filter1_Q': false,
     	'FLO2_Filter1_Q': false,
+      'LFO2_wave': 'sine',
       'LFO2_amplitude': 0,
       'LFO2_rate': 0,
 

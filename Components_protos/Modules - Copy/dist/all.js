@@ -429,9 +429,7 @@ var LFO = (function () {
     this.rate = 0;
     this.amplitude = 0;
     this.lfo = ctx.createOscillator();
-    //this.audioParam = null;
     this.lfoAmplitude = this.ctx.createGain();
-    //this.lfo.connect(this.lfoAmplitude);
   }
 
   _createClass(LFO, [{
@@ -461,6 +459,13 @@ var LFO = (function () {
     //rate is the lfo frequency
     value: function setRate(value) {
       this.rate = value;
+    }
+  }, {
+    key: 'setType',
+
+    //wave type/form
+    value: function setType(value) {
+      this.lfo.type = value;
     }
   }, {
     key: 'start',
@@ -692,6 +697,7 @@ var Patch = (function () {
       'FLO1_Osc2_gain': false,
       'FLO1_Osc1_pitch': false,
       'FLO1_Osc2_pitch': false,
+      'LFO1_wave': 'square',
       'LFO1_amplitude': 0,
       'LFO1_rate': 0,
 
@@ -701,6 +707,7 @@ var Patch = (function () {
       'FLO2_Filter2_gain': false,
       'FLO2_Filter1_Q': false,
       'FLO2_Filter1_Q': false,
+      'LFO2_wave': 'sine',
       'LFO2_amplitude': 0,
       'LFO2_rate': 0,
 
@@ -887,14 +894,10 @@ var Voice = (function () {
         this.oscillators.push(vco2);
       }
 
-      //vcf1.connect(masterAmp.input);
-      //vcf2.connect(masterAmp.input);
       vcf1.connect(delay.input);
       vcf2.connect(delay.input);
-      //this.mergerGain.connect(delay.input);
       delay.connect(masterAmp.input);
       //delay.setFeedbackGain(0.3 * velocity);
-      console.log('delay ', delay);
     }
   }, {
     key: 'stop',
@@ -981,13 +984,15 @@ window.onload = function () {
   effects['MasterAmp'] = new MasterAmp(ctx);
 
   effects['LFO1'] = new LFO(ctx);
-  effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
-  effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
+  // effects['LFO1'].setType(patch.getParameter('LFO1_wave'));
+  // effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
+  // effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
   effects['LFO1'].start();
 
   effects['LFO2'] = new LFO(ctx);
-  effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
-  effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
+  // effects['LFO2'].setType(patch.getParameter('LFO1_wave'));
+  // effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
+  // effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
   effects['LFO2'].start();
 
   effects['Delay'] = new Delay(ctx);
@@ -1032,10 +1037,12 @@ function initPatch() {
       vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
 
       //LFO1 (Oscillators)
+      lfo1.setType(patch.getParameter('LFO1_wave'));
       lfo1.setAmplitude(+patch.getParameter('LFO1_amplitude'));
       lfo1.setRate(+patch.getParameter('LFO1_rate'));
 
       //LFO2 (Filters)
+      lfo2.setType(patch.getParameter('LFO2_wave'));
       lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
       lfo2.setRate(+patch.getParameter('LFO2_rate'));
 
@@ -1343,6 +1350,12 @@ function initSynth() {
   //LFO1
   oscLFOProto = Object.create(HTMLElement.prototype);
   oscLFOProto.createdCallback = function () {
+    var waveTypeControl = HtmlControl.createSelect({
+      id: this.id + '_wave',
+      labelText: 'Wave Type ',
+      options: ['sine', 'square', 'triangle', 'sawtooth']
+    });
+
     var amplitudeControl = HtmlControl.createSlider({
       id: this.id + '_amplitude',
       min: 0,
@@ -1363,6 +1376,11 @@ function initSynth() {
     });
     var rateLabel;
     var routingTable;
+
+    //wave form
+    this.appendChild(waveTypeControl.label);
+    this.appendChild(waveTypeControl.select);
+
     //amplitude
     amplitudeLabel = document.createElement('label');
     amplitudeLabel.innerHTML = 'Amplitude';
@@ -1386,6 +1404,12 @@ function initSynth() {
   //LFO2
   filterLFOProto = Object.create(HTMLElement.prototype);
   filterLFOProto.createdCallback = function () {
+    var waveTypeControl = HtmlControl.createSelect({
+      id: this.id + '_wave',
+      labelText: 'Wave Type ',
+      options: ['sine', 'square', 'triangle', 'sawtooth']
+    });
+
     var amplitudeControl = HtmlControl.createSlider({
       id: this.id + '_amplitude',
       min: 0,
@@ -1406,6 +1430,10 @@ function initSynth() {
     });
     var rateLabel;
     var routingTable;
+
+    //wave type
+    this.appendChild(waveTypeControl.label);
+    this.appendChild(waveTypeControl.select);
 
     //amplitude
     amplitudeLabel = document.createElement('label');

@@ -125,14 +125,10 @@ class Voice {
       this.oscillators.push(vco2);
     }
 
-    //vcf1.connect(masterAmp.input);
-    //vcf2.connect(masterAmp.input);
     vcf1.connect(delay.input);
     vcf2.connect(delay.input);
-    //this.mergerGain.connect(delay.input);
     delay.connect(masterAmp.input);
     //delay.setFeedbackGain(0.3 * velocity);
-    console.log('delay ', delay);
   }
 
   stop() {

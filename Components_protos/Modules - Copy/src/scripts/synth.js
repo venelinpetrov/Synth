@@ -62,13 +62,15 @@
     effects['MasterAmp'] = new MasterAmp(ctx);
 
     effects['LFO1'] = new LFO(ctx);
-    effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
-    effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
+    // effects['LFO1'].setType(patch.getParameter('LFO1_wave'));
+    // effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
+    // effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
     effects['LFO1'].start();
 
     effects['LFO2'] = new LFO(ctx);
-    effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
-    effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
+    // effects['LFO2'].setType(patch.getParameter('LFO1_wave'));
+    // effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
+    // effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
     effects['LFO2'].start();
 
     effects['Delay'] = new Delay(ctx);
@@ -114,10 +116,12 @@
         vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
 
         //LFO1 (Oscillators)
+        lfo1.setType(patch.getParameter('LFO1_wave'));
         lfo1.setAmplitude(+patch.getParameter('LFO1_amplitude'));
         lfo1.setRate(+patch.getParameter('LFO1_rate'));
 
         //LFO2 (Filters)
+        lfo2.setType(patch.getParameter('LFO2_wave'));
         lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
         lfo2.setRate(+patch.getParameter('LFO2_rate'));
 
@@ -431,6 +435,12 @@
     //LFO1
     oscLFOProto = Object.create(HTMLElement.prototype);
     oscLFOProto.createdCallback = function() {
+      var waveTypeControl = HtmlControl.createSelect({
+        id: this.id + '_wave',
+        labelText: 'Wave Type ',
+        options: ['sine', 'square', 'triangle', 'sawtooth']
+      });
+
       var amplitudeControl = HtmlControl.createSlider({
         id: this.id + '_amplitude',
         min: 0,
@@ -451,6 +461,11 @@
       });
       var rateLabel;
       var routingTable;
+
+      //wave form
+      this.appendChild(waveTypeControl.label);
+      this.appendChild(waveTypeControl.select);
+
       //amplitude
       amplitudeLabel = document.createElement('label');
       amplitudeLabel.innerHTML = 'Amplitude';
@@ -474,6 +489,12 @@
     //LFO2
     filterLFOProto = Object.create(HTMLElement.prototype);
     filterLFOProto.createdCallback = function() {
+      var waveTypeControl = HtmlControl.createSelect({
+        id: this.id + '_wave',
+        labelText: 'Wave Type ',
+        options: ['sine', 'square', 'triangle', 'sawtooth']
+      });
+
       var amplitudeControl = HtmlControl.createSlider({
         id: this.id + '_amplitude',
         min: 0,
@@ -494,6 +515,10 @@
       });
       var rateLabel;
       var routingTable;
+
+      //wave type
+      this.appendChild(waveTypeControl.label);
+      this.appendChild(waveTypeControl.select);
 
       //amplitude
       amplitudeLabel = document.createElement('label');
