@@ -52,8 +52,8 @@ class LFO {
     try {
       this.lfoAmplitude.disconnect(audioParam);
     } catch(e) {
-      console.log(e);
-      console.log(audioParam, 'already disconnected');
+      // console.log(e);
+      // console.log(audioParam, 'already disconnected');
     }
   }
 }

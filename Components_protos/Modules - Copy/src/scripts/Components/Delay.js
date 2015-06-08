@@ -41,14 +41,19 @@ class Delay {
   }
 
   bypass(bypassed) {
-    if(bypassed) {
-      this.inputGain.disconnect(this.dryGain);
-      this.inputGain.disconnect(this.wetGain);
-      this.inputGain.connect(this.outputGain);
-    } else {
-      this.inputGain.connect(this.dryGain);
-      this.inputGain.connect(this.wetGain);
-      this.inputGain.disconnect(this.outputGain);
+    try {
+      if(bypassed) {
+        this.inputGain.disconnect(this.dryGain);
+        this.inputGain.disconnect(this.wetGain);
+        this.inputGain.connect(this.outputGain);
+      } else {
+        this.inputGain.disconnect(this.outputGain);
+        this.inputGain.connect(this.dryGain);
+        this.inputGain.connect(this.wetGain);
+      }
+    } catch (e) {
+      //console.log('delay bypass-->', e);
     }
+
   }
 }

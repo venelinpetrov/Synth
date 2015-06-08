@@ -39,9 +39,6 @@ class Filter {
 
     //create filter node
     this.vcf = ctx.createBiquadFilter();
-    this.vcf.frequency.value = 900;
-    //this.vcf.Q.value = 2;
-    this.vcf.type = 'lowpass';
     //dry/wet gains
     this.dryGain = this.ctx.createGain();
     this.wetGain = this.ctx.createGain();
@@ -71,13 +68,18 @@ class Filter {
 
   bypass(bypassed){
     //this.inputNode.disconnect(this.vcf);
-    if(bypassed) {
-      this.inputNode.disconnect(this.vcf);
-      this.inputNode.connect(this.outputNode);
-    } else {
-      this.inputNode.connect(this.vcf);
-      this.inputNode.disconnect(this.outputNode);
+    try {
+      if(bypassed) {
+        this.inputNode.disconnect(this.vcf);
+        this.inputNode.connect(this.outputNode);
+      } else {
+        this.inputNode.disconnect(this.outputNode);
+        this.inputNode.connect(this.vcf);
+      }
+    } catch (e) {
+      //console.log('filter bypass-->', e);
     }
+
 
   }
 

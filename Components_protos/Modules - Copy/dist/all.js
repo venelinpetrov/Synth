@@ -57,15 +57,17 @@ var Delay = (function () {
   }, {
     key: 'bypass',
     value: function bypass(bypassed) {
-      if (bypassed) {
-        this.inputGain.disconnect(this.dryGain);
-        this.inputGain.disconnect(this.wetGain);
-        this.inputGain.connect(this.outputGain);
-      } else {
-        this.inputGain.connect(this.dryGain);
-        this.inputGain.connect(this.wetGain);
-        this.inputGain.disconnect(this.outputGain);
-      }
+      try {
+        if (bypassed) {
+          this.inputGain.disconnect(this.dryGain);
+          this.inputGain.disconnect(this.wetGain);
+          this.inputGain.connect(this.outputGain);
+        } else {
+          this.inputGain.disconnect(this.outputGain);
+          this.inputGain.connect(this.dryGain);
+          this.inputGain.connect(this.wetGain);
+        }
+      } catch (e) {}
     }
   }]);
 
@@ -175,9 +177,6 @@ var Filter = (function () {
 
     //create filter node
     this.vcf = ctx.createBiquadFilter();
-    this.vcf.frequency.value = 900;
-    //this.vcf.Q.value = 2;
-    this.vcf.type = 'lowpass';
     //dry/wet gains
     this.dryGain = this.ctx.createGain();
     this.wetGain = this.ctx.createGain();
@@ -211,13 +210,15 @@ var Filter = (function () {
     key: 'bypass',
     value: function bypass(bypassed) {
       //this.inputNode.disconnect(this.vcf);
-      if (bypassed) {
-        this.inputNode.disconnect(this.vcf);
-        this.inputNode.connect(this.outputNode);
-      } else {
-        this.inputNode.connect(this.vcf);
-        this.inputNode.disconnect(this.outputNode);
-      }
+      try {
+        if (bypassed) {
+          this.inputNode.disconnect(this.vcf);
+          this.inputNode.connect(this.outputNode);
+        } else {
+          this.inputNode.disconnect(this.outputNode);
+          this.inputNode.connect(this.vcf);
+        }
+      } catch (e) {}
     }
   }, {
     key: 'setType',
@@ -489,10 +490,7 @@ var LFO = (function () {
     value: function disconnect(audioParam) {
       try {
         this.lfoAmplitude.disconnect(audioParam);
-      } catch (e) {
-        console.log(e);
-        console.log(audioParam, 'already disconnected');
-      }
+      } catch (e) {}
     }
   }]);
 
@@ -927,11 +925,37 @@ var equalTempered440;
 var effects = {}; // global effects
 
 window.onload = function () {
+
   patch = new Patch();
+
   equalTempered440 = [16.35, 17.32, 18.35, 19.45, 20.6, 21.83, 23.12, 24.5, 25.96, 27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 41.2, 43.65, 46.25, 49, 51.91, 55, 58.27, 61.74, 65.41, 69.3, 73.42, 77.78, 82.41, 87.31, 92.5, 98, 103.83, 110, 116.54, 123.47, 130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185, 196, 207.65, 220, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392, 415.3, 440, 466.16, 493.88, 523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880, 932.33, 987.77, 1046.5, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760, 1864.66, 1975.53, 2093, 2217.46, 2349.32, 2489.02, 2637.02, 2793.83, 2959.96, 3135.96, 3322.44, 3520, 3729.31, 3951.07, 4186.01, 4434.92, 4698.63, 4978.03, 5274.04, 5587.65, 5919.91, 6271.93, 6644.88, 7040, 7458.62, 7902.13];
 
   var ctx = new AudioContext();
   var active_voices = {};
+
+  //Import settings
+  document.getElementById('upload').onchange = function () {
+    var fr = new FileReader();
+    fr.onload = function () {
+      patch.setPatch(JSON.parse(this.result));
+
+      //Initialize patch
+      initPatch();
+
+      //Initialize effects
+      initEffects();
+
+      [].forEach.call(document.getElementsByClassName('power'), function (v) {
+        v.checked = patch.getParameter(v.id); //init value with default patch
+        v.addEventListener('change', function (e) {
+          patch.setParameter(e.target.id, e.target.checked);
+          console.log(patch);
+        }, false);
+      });
+      console.log(this.result);
+    };
+    fr.readAsText(this.files[0]);
+  };
 
   //Request midi accsess
   navigator.requestMIDIAccess().then(function (midiAccess) {
@@ -944,7 +968,7 @@ window.onload = function () {
     console.log('Failed to get MIDI access - ', msg);
   });
 
-  //OnMidiMessage event handler
+  //onmidimessage event handler
   function onMIDIMessage(event) {
     console.log(event.data);
     var status = event.data[0];
@@ -976,30 +1000,26 @@ window.onload = function () {
 
   //Create gloabal effects
   effects['Filter1'] = new Filter(ctx);
-  effects['Filter1'].bypass(true);
   effects['Filter2'] = new Filter(ctx);
-  effects['Filter2'].bypass(true);
 
   effects['Envelope'] = new Envelope(ctx);
   effects['MasterAmp'] = new MasterAmp(ctx);
 
   effects['LFO1'] = new LFO(ctx);
+  effects['LFO1'].start();
   // effects['LFO1'].setType(patch.getParameter('LFO1_wave'));
   // effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
   // effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
-  effects['LFO1'].start();
 
   effects['LFO2'] = new LFO(ctx);
+  effects['LFO2'].start();
   // effects['LFO2'].setType(patch.getParameter('LFO1_wave'));
   // effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
   // effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
-  effects['LFO2'].start();
 
   effects['Delay'] = new Delay(ctx);
-  effects['Delay'].bypass(true);
-  effects['Delay'].setDelayTime(+patch.getParameter('Delay_delayTime'));
-  effects['Delay'].setFeedbackGain(+patch.getParameter('Delay_feedback'));
-  effects['Delay'].setDryWet(+patch.getParameter('Delay_dryWet'));
+
+  initEffects();
 };
 
 //Initialize patch function
@@ -1010,50 +1030,8 @@ function initPatch() {
   [].forEach.call(params, function (v) {
     v.value = patch.getParameter(v.id); //init value with default patch
     v.addEventListener('input', function (e) {
-      var vcf1 = effects['Filter1'];
-      var vcf2 = effects['Filter2'];
-
-      var lfo1 = effects['LFO1'];
-      var lfo2 = effects['LFO2'];
-
-      var delay = effects['Delay'];
-
-      var masterAmp = effects['MasterAmp'];
-
-      patch.setParameter(e.target.id, e.target.value);
-      console.log(patch);
-
-      //filters
-      vcf1.setType(patch.getParameter('Filter1_type'));
-      vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
-      vcf1.setGain(patch.getParameter('Filter1_gain'));
-      vcf1.setQ(patch.getParameter('Filter1_Q'));
-      vcf1.setDryWet(patch.getParameter('Filter1_dryWet'));
-
-      vcf2.setType(patch.getParameter('Filter2_type'));
-      vcf2.setFrequency(patch.getParameter('Filter2_frequency'));
-      vcf2.setGain(patch.getParameter('Filter2_gain'));
-      vcf2.setQ(patch.getParameter('Filter2_Q'));
-      vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
-
-      //LFO1 (Oscillators)
-      lfo1.setType(patch.getParameter('LFO1_wave'));
-      lfo1.setAmplitude(+patch.getParameter('LFO1_amplitude'));
-      lfo1.setRate(+patch.getParameter('LFO1_rate'));
-
-      //LFO2 (Filters)
-      lfo2.setType(patch.getParameter('LFO2_wave'));
-      lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
-      lfo2.setRate(+patch.getParameter('LFO2_rate'));
-
-      //delay
-      delay.setDelayTime(+patch.getParameter('Delay_delayTime'));
-      delay.setFeedbackGain(+patch.getParameter('Delay_feedback'));
-      delay.setDryWet(+patch.getParameter('Delay_dryWet'));
-
-      //master amp
-      masterAmp.setPan(patch.getParameter('Amp_pan'));
-      masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
+      patch.setParameter(e.target.id, e.target.value); //html to patch
+      initEffects();
     }, false);
   });
 
@@ -1067,7 +1045,71 @@ function initPatch() {
   });
 }
 
-//Initialize synth function
+function initEffects() {
+  var vcf1 = effects['Filter1'];
+  var vcf2 = effects['Filter2'];
+
+  var lfo1 = effects['LFO1'];
+  var lfo2 = effects['LFO2'];
+
+  var delay = effects['Delay'];
+
+  var masterAmp = effects['MasterAmp'];
+
+  console.log(patch);
+  //Oscillators
+  // --> initialized in Voice
+
+  //Filters
+  if (patch.getParameter('Filter1_on') == false) {
+    vcf1.bypass(true);
+  } else {
+    vcf1.bypass(false);
+  }
+  vcf1.setType(patch.getParameter('Filter1_type'));
+  vcf1.setFrequency(patch.getParameter('Filter1_frequency'));
+  vcf1.setGain(patch.getParameter('Filter1_gain'));
+  vcf1.setQ(patch.getParameter('Filter1_Q'));
+  vcf1.setDryWet(patch.getParameter('Filter1_dryWet'));
+
+  if (patch.getParameter('Filter2_on') == false) {
+    vcf2.bypass(true);
+  } else {
+    vcf2.bypass(false);
+  }
+  vcf2.setType(patch.getParameter('Filter2_type'));
+  vcf2.setFrequency(patch.getParameter('Filter2_frequency'));
+  vcf2.setGain(patch.getParameter('Filter2_gain'));
+  vcf2.setQ(patch.getParameter('Filter2_Q'));
+  vcf2.setDryWet(patch.getParameter('Filter2_dryWet'));
+
+  //Envelope
+  // --> initialized in Voice
+
+  //LFO1 (Oscillators)
+  lfo1.setType(patch.getParameter('LFO1_wave'));
+  lfo1.setAmplitude(+patch.getParameter('LFO1_amplitude'));
+  lfo1.setRate(+patch.getParameter('LFO1_rate'));
+
+  //LFO2 (Filters)
+  lfo2.setType(patch.getParameter('LFO2_wave'));
+  lfo2.setAmplitude(+patch.getParameter('LFO2_amplitude'));
+  lfo2.setRate(+patch.getParameter('LFO2_rate'));
+
+  //Delay
+  if (patch.getParameter('Delay_on') == false) {
+    effects['Delay'].bypass(true);
+  }
+  delay.setDelayTime(+patch.getParameter('Delay_delayTime'));
+  delay.setFeedbackGain(+patch.getParameter('Delay_feedback'));
+  delay.setDryWet(+patch.getParameter('Delay_dryWet'));
+
+  //Master amp
+  masterAmp.setPan(patch.getParameter('Amp_pan'));
+  masterAmp.setMasterGain(patch.getParameter('Amp_masterGain'));
+}
+
+//Render and initialize synth
 function initSynth() {
   var oscProto;
   var filterProto;
@@ -1565,4 +1607,11 @@ function initSynth() {
   };
   document.registerElement('x-amp', { prototype: ampProto });
 }
+
+//console.log('delay bypass-->', e);
+
+//console.log('filter bypass-->', e);
+
+// console.log(e);
+// console.log(audioParam, 'already disconnected');
 //# sourceMappingURL=all.js.map
