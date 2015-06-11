@@ -79,10 +79,6 @@ class Oscillator {
   get vcaAudioParam() {
     return this.vca.gain;
   }
-  //connect vca->external_node
-  // connect(node) {
-  //   this.vca.connect(node);
-  // }
 
   //start/stop
   start(time=0) {
