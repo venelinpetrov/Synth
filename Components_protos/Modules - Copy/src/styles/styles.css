@@ -1,8 +1,1 @@
-//Main style sheet is generated from here
-//Important: don't add anything diffrent than @imports here
 
-@import "Components/common";
-@import "Components/header";
-@import "Components/buttons";
-@import "Components/module";
-@import "Components/slider";

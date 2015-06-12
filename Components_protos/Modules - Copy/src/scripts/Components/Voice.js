@@ -140,8 +140,4 @@ class Voice {
       oscillator.stop(this.ctx.currentTime + this.endTime); //osc stops when note is dead
     });
   }
-
-  getEndTime() {
-    return this.endTime;
-  }
 }

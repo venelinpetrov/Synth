@@ -29,12 +29,11 @@ class Envelope {
     audioParam.linearRampToValueAtTime(audioParam.value, now + attackTime);
     //decay phase and sustain level
     audioParam.linearRampToValueAtTime(audioParam.value * sustainLevel, now + attackTime + decayTime);
-    
+
     //release phase
     //the release phase is independently set in Voice.stop() via
     //oscillator.vca.gain.linearRampToValueAtTime(0,this.ctx.currentTime + this.endTime);
 
     return attackTime + decayTime + releaseTime;
   }
-
 }

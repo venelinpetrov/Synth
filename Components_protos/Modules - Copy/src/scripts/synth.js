@@ -88,16 +88,10 @@
 
     effects['LFO1'] = new LFO(ctx);
     effects['LFO1'].start();
-    // effects['LFO1'].setType(patch.getParameter('LFO1_wave'));
-    // effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
-    // effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
 
 
     effects['LFO2'] = new LFO(ctx);
     effects['LFO2'].start();
-    // effects['LFO2'].setType(patch.getParameter('LFO1_wave'));
-    // effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
-    // effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
 
 
     effects['Delay'] = new Delay(ctx);

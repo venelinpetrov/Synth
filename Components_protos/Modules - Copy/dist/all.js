@@ -648,11 +648,6 @@ var Oscillator = (function () {
   }, {
     key: 'start',
 
-    //connect vca->external_node
-    // connect(node) {
-    //   this.vca.connect(node);
-    // }
-
     //start/stop
     value: function start() {
       var time = arguments[0] === undefined ? 0 : arguments[0];
@@ -910,11 +905,6 @@ var Voice = (function () {
         oscillator.stop(_this.ctx.currentTime + _this.endTime); //osc stops when note is dead
       });
     }
-  }, {
-    key: 'getEndTime',
-    value: function getEndTime() {
-      return this.endTime;
-    }
   }]);
 
   return Voice;
@@ -1007,15 +997,9 @@ window.onload = function () {
 
   effects['LFO1'] = new LFO(ctx);
   effects['LFO1'].start();
-  // effects['LFO1'].setType(patch.getParameter('LFO1_wave'));
-  // effects['LFO1'].setAmplitude(+patch.getParameter('LFO1_amplitude'));
-  // effects['LFO1'].setRate(+patch.getParameter('LFO1_rate'));
 
   effects['LFO2'] = new LFO(ctx);
   effects['LFO2'].start();
-  // effects['LFO2'].setType(patch.getParameter('LFO1_wave'));
-  // effects['LFO2'].setAmplitude(+patch.getParameter('LFO2_amplitude'));
-  // effects['LFO2'].setRate(+patch.getParameter('LFO2_rate'));
 
   effects['Delay'] = new Delay(ctx);
 
@@ -1607,8 +1591,6 @@ function initSynth() {
   };
   document.registerElement('x-amp', { prototype: ampProto });
 }
-
-//console.log('delay bypass-->', e);
 
 //console.log('filter bypass-->', e);
 
