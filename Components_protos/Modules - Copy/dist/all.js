@@ -416,6 +416,39 @@ var HtmlControl = (function () {
 
       return { input: input, label: label };
     }
+  }, {
+    key: 'createOnOfSwitch',
+    value: function createOnOfSwitch(id) {
+      var wrapper = document.createElement('div');
+      var input = document.createElement('input');
+      var label = document.createElement('label');
+      var inner = document.createElement('span');
+      var switchBtn = document.createElement('span');
+
+      //wrapper
+      wrapper.className = 'onoffswitch';
+
+      //input
+      input.id = id;
+      input.setAttribute('type', 'checkbox');
+      input.className = 'power onoffswitch-checkbox';
+
+      //label
+      label.className = 'onoffswitch-label';
+      label.setAttribute('for', id);
+
+      //inside label
+      inner.className = 'onoffswitch-inner';
+      switchBtn.className = 'onoffswitch-switch';
+
+      //structure
+      wrapper.appendChild(input);
+      wrapper.appendChild(label);
+      label.appendChild(inner);
+      label.appendChild(switchBtn);
+
+      return { wrapper: wrapper, input: input };
+    }
   }]);
 
   return HtmlControl;
@@ -1106,15 +1139,15 @@ function initSynth() {
   //Oscillator html rendering
   oscProto = Object.create(HTMLElement.prototype);
   oscProto.createdCallback = function () {
-    var powerControl = HtmlControl.createCheckBox({
-      id: this.id + '_on',
-      labelText: 'On/Off: ',
-      className: 'power'
-    });
+    var f1f2Wrapper = document.createElement('span');
+    var f1Label = document.createElement('span');
+    var f2Label = document.createElement('span');
+    var powerControl = HtmlControl.createOnOfSwitch(this.id + '_on');
+
     var gainControl = HtmlControl.createSlider({
       id: this.id + '_gain',
       advanced: true,
-      labelText: 'Amp: ',
+      labelText: 'Amp',
       min: 0,
       max: 1,
       step: 0.1,
@@ -1124,7 +1157,7 @@ function initSynth() {
 
     var waveTypeControl = HtmlControl.createSelect({
       id: this.id + '_wave',
-      labelText: 'Wave Type: ',
+      labelText: 'Wave',
       options: ['sine', 'square', 'triangle', 'sawtooth']
     });
 
@@ -1147,16 +1180,17 @@ function initSynth() {
     });
 
     //on/off control
-    this.appendChild(powerControl.label);
-    this.appendChild(powerControl.input);
+    this.appendChild(powerControl.wrapper);
 
     //wave type control
     this.appendChild(waveTypeControl.label);
     this.appendChild(waveTypeControl.select);
+    this.appendChild(document.createElement('br'));
 
     //pitch control
     this.appendChild(pitchControl.label);
     this.appendChild(pitchControl.input);
+    this.appendChild(document.createElement('br'));
 
     //gain control
     gainControl.label.setAttribute('for', this.id + '_gain');
@@ -1165,7 +1199,16 @@ function initSynth() {
     this.appendChild(gainControl.valueIndicator);
 
     //F1F2 control
-    this.appendChild(f1f2Control.slider);
+    f1Label.innerHTML = 'F1';
+    f1Label.className = 'f1Label';
+    f2Label.innerHTML = 'F2';
+    f2Label.className = 'f2Label';
+    f1f2Wrapper.className = 'f1f2Wrapper';
+    f1f2Wrapper.appendChild(f2Label);
+    f1f2Wrapper.appendChild(f1f2Control.slider);
+
+    f1f2Wrapper.appendChild(f1Label);
+    this.appendChild(f1f2Wrapper);
 
     console.log('Oscillator created');
   };
@@ -1174,14 +1217,10 @@ function initSynth() {
   //Filter html rendering
   filterProto = Object.create(HTMLElement.prototype);
   filterProto.createdCallback = function () {
-    var powerControl = HtmlControl.createCheckBox({
-      id: this.id + '_on',
-      labelText: 'On/Off: ',
-      className: 'power'
-    });
+    var powerControl = HtmlControl.createOnOfSwitch(this.id + '_on');
     var filterTypeControl = HtmlControl.createSelect({
       id: this.id + '_type',
-      labelText: 'Filter Type: ',
+      labelText: 'Filter Type',
       options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'peaking', 'notch']
     });
 
@@ -1217,7 +1256,7 @@ function initSynth() {
 
     var dryWetControl = HtmlControl.createSlider({
       id: this.id + '_dryWet',
-      labelText: 'Dry/Wet (%)',
+      labelText: 'Dry/Wet',
       min: 0,
       max: 1,
       step: 0.1,
@@ -1227,8 +1266,7 @@ function initSynth() {
     var type = patch.getParameter(this.id + '_type');
 
     //on/off
-    this.appendChild(powerControl.label);
-    this.appendChild(powerControl.input);
+    this.appendChild(powerControl.wrapper);
     //handle filter on/off -> pypass it when off
     powerControl.input.addEventListener('change', (function () {
       if (patch.getParameter(this.id + '_on') == false) {
@@ -1243,6 +1281,7 @@ function initSynth() {
     //filter type control
     this.appendChild(filterTypeControl.label);
     this.appendChild(filterTypeControl.select);
+    this.appendChild(document.createElement('br'));
     filterTypeControl.select.addEventListener('change', function (e) {
       var option = e.currentTarget.value;
 
@@ -1355,16 +1394,19 @@ function initSynth() {
     this.appendChild(attackTimeControl.label);
     this.appendChild(attackTimeControl.slider);
     this.appendChild(attackTimeControl.valueIndicator);
+    this.appendChild(document.createElement('br'));
 
     //decay
     this.appendChild(decayTimeControl.label);
     this.appendChild(decayTimeControl.slider);
     this.appendChild(decayTimeControl.valueIndicator);
+    this.appendChild(document.createElement('br'));
 
     //sustain
     this.appendChild(sustainTimeControl.label);
     this.appendChild(sustainTimeControl.slider);
     this.appendChild(sustainTimeControl.valueIndicator);
+    this.appendChild(document.createElement('br'));
 
     //release
     this.appendChild(releaseTimeControl.label);
@@ -1378,7 +1420,7 @@ function initSynth() {
   oscLFOProto.createdCallback = function () {
     var waveTypeControl = HtmlControl.createSelect({
       id: this.id + '_wave',
-      labelText: 'Wave Type ',
+      labelText: 'Wave',
       options: ['sine', 'square', 'triangle', 'sawtooth']
     });
 
@@ -1406,18 +1448,21 @@ function initSynth() {
     //wave form
     this.appendChild(waveTypeControl.label);
     this.appendChild(waveTypeControl.select);
+    this.appendChild(document.createElement('br'));
 
     //amplitude
     amplitudeLabel = document.createElement('label');
     amplitudeLabel.innerHTML = 'Amplitude';
     this.appendChild(amplitudeLabel);
     this.appendChild(amplitudeControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //rate
     rateLabel = document.createElement('label');
     rateLabel.innerHTML = 'Rate';
     this.appendChild(rateLabel);
     this.appendChild(rateControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //routing table
     routingTable = document.createElement('table');
@@ -1432,7 +1477,7 @@ function initSynth() {
   filterLFOProto.createdCallback = function () {
     var waveTypeControl = HtmlControl.createSelect({
       id: this.id + '_wave',
-      labelText: 'Wave Type ',
+      labelText: 'Wave',
       options: ['sine', 'square', 'triangle', 'sawtooth']
     });
 
@@ -1460,18 +1505,21 @@ function initSynth() {
     //wave type
     this.appendChild(waveTypeControl.label);
     this.appendChild(waveTypeControl.select);
+    this.appendChild(document.createElement('br'));
 
     //amplitude
     amplitudeLabel = document.createElement('label');
     amplitudeLabel.innerHTML = 'Amplitude';
     this.appendChild(amplitudeLabel);
     this.appendChild(amplitudeControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //rate
     rateLabel = document.createElement('label');
     rateLabel.innerHTML = 'Rate';
     this.appendChild(rateLabel);
     this.appendChild(rateControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //routing table
     routingTable = document.createElement('table');
@@ -1488,11 +1536,7 @@ function initSynth() {
     var feedbackLabel;
     var dryWetLabel;
 
-    var powerControl = HtmlControl.createCheckBox({
-      id: this.id + '_on',
-      labelText: 'On/Off: ',
-      className: 'power'
-    });
+    var powerControl = HtmlControl.createOnOfSwitch(this.id + '_on');
 
     var delayTimeControl = HtmlControl.createSlider({
       id: this.id + '_delayTime',
@@ -1522,8 +1566,7 @@ function initSynth() {
     });
 
     //power
-    this.appendChild(powerControl.label);
-    this.appendChild(powerControl.input);
+    this.appendChild(powerControl.wrapper);
     powerControl.input.addEventListener('change', (function () {
       if (patch.getParameter(this.id + '_on') == false) {
         effects[this.id].bypass(false);
@@ -1539,12 +1582,14 @@ function initSynth() {
     delayTimeLabel.innerHTML = 'Delay time';
     this.appendChild(delayTimeLabel);
     this.appendChild(delayTimeControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //feedback
     feedbackLabel = document.createElement('label');
     feedbackLabel.innerHTML = 'Feedback';
     this.appendChild(feedbackLabel);
     this.appendChild(feedbackControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //dry/wet
     dryWetLabel = document.createElement('label');
@@ -1582,6 +1627,7 @@ function initSynth() {
     labelVolume.innerHTML = 'Volume';
     this.appendChild(labelVolume);
     this.appendChild(masterGainControl.slider);
+    this.appendChild(document.createElement('br'));
 
     //pan
     labelPan = document.createElement('label');

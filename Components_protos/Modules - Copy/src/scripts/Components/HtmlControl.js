@@ -89,6 +89,7 @@ class HtmlControl {
 
 
   static createCheckBox({id, labelText, className} = {}) {
+
     var input = document.createElement('input');
     var label = document.createElement('label');
 
@@ -101,5 +102,37 @@ class HtmlControl {
 
     return {input, label};
 
+  }
+
+  static createOnOfSwitch(id) {
+    var wrapper = document.createElement('div');
+    var input = document.createElement('input');
+    var label = document.createElement('label');
+    var inner = document.createElement('span');
+    var switchBtn = document.createElement('span');
+
+    //wrapper
+    wrapper.className = 'onoffswitch';
+
+    //input
+    input.id = id;
+    input.setAttribute('type', 'checkbox');
+    input.className = 'power onoffswitch-checkbox';
+
+    //label
+    label.className = 'onoffswitch-label';
+    label.setAttribute('for', id);
+
+    //inside label
+    inner.className = 'onoffswitch-inner';
+    switchBtn.className = 'onoffswitch-switch';
+
+    //structure
+    wrapper.appendChild(input);
+    wrapper.appendChild(label);
+    label.appendChild(inner);
+    label.appendChild(switchBtn);
+
+    return {wrapper, input};
   }
 }

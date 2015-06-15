@@ -1,1 +1,133 @@
 //All kinds of buttons go here
+
+
+.onoffswitch {
+    display: inline-block;
+    top: 2px;
+    right: 2px;
+    position: absolute;
+    width: 50px;
+    border-radius: 9px;
+
+}
+
+.onoffswitch-checkbox {
+    display: none;
+}
+
+.onoffswitch-label {
+    padding: 0;
+    width: 50px;
+    display: block;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 9px;
+
+}
+
+.onoffswitch-inner {
+    display: block;
+    width: 200%;
+    margin-left: -100%;
+    transition: margin 0.3s ease-in 0s;
+
+}
+
+.onoffswitch-inner:before,
+.onoffswitch-inner:after {
+    display: block;
+    float: left;
+    width: 50%;
+    height: 18px;
+    padding: 0;
+    line-height: 18px;
+    font-size: 11px;
+    color: white;
+    box-sizing: border-box;
+}
+.onoffswitch-inner:before {
+    content: "ON ";
+    padding-left: 10px;
+    background-color: #383735; color: #fff;
+}
+.onoffswitch-inner:after {
+    content: "OFF";
+    padding-right: 8px;
+    background-color: #55534f;
+    color: darken(#fff, 20%);
+    text-align: right;
+}
+.onoffswitch-switch {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: #aba79f;
+    border-radius: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 33px;
+    -moz-transition: all 0.3s ease-in 0s; -webkit-transition: all 0.3s ease-in 0s;
+    -o-transition: all 0.3s ease-in 0s; transition: all 0.3s ease-in 0s;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+    margin-left: 0;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+    right: 0px;
+    background-color: #f3620b;
+}
+
+
+//upload
+[type="file"] {
+  border: 1px solid #383735;
+  border-radius: 3px;
+  outline: none;
+  background: #f3620b;
+  color: white;
+  margin-top: auto;
+}
+
+.custom-file-input::-webkit-file-upload-button {
+  visibility: hidden;
+}
+
+.custom-file-input::before {
+  font-family: FontAwesome;
+  content: '\f115';
+  display: inline-block;
+  background: #383735;
+  border-radius: 3px;
+  padding: 17px;
+  outline: none;
+  cursor: pointer;
+  color: #fff;
+
+}
+
+.factory-settings {
+  background: #383735;
+  border: 0 none;
+  border-radius: 3px;
+  margin-top: auto;
+  margin-left: auto;
+  margin-right: 5px;
+  padding: 0;
+  border: 1px solid #383735;
+  &::before {
+    font-family: FontAwesome;
+    content: "\f0e2";
+    color: #fff;
+    display:inline-block;
+    padding: 17px;
+
+  }
+}
+
+.custom-file-input:hover::before {
+}
+.custom-file-input:active::before {
+  background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+}

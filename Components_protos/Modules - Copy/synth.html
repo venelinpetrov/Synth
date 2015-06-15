@@ -2,85 +2,88 @@
 
 <html>
 <head>
-	<title>Volta</title>
-
+	<title>Fourier</title>
 	<script src="dist/all.js"></script>
-	<style>
-		[type="range"] {
-			vertical-align: middle;
-		}
-		th {
-			text-align: left;
-		}
-	</style>
+
+	<link rel="stylesheet" href="src/styles/styles.css">
 </head>
 <body>
 	<form>
-	<h2>Volta synth</h2>
-	<input type="file" id="upload">
-	<input type="submit" value="Factory settings">
-	<script>
+		<div id="header">
+
+			<h2><img src="images/logo.png" alt="logo" width="260"/></h2>
+			<button type="submit" value=""  class="factory-settings"></button>
+			<button type="submit" value=""  class="factory-settings"></button>
+			<input type="file" id="upload" class="custom-file-input">
+		</div>
+
+		<div id="main">
+			<div id="left">
+				<fieldset class="panel osc">
+					<legend>Osc1</legend>
+					<x-osc id="Osc1"></x-osc>
+				</fieldset>
+
+				<fieldset class="panel osc">
+					<legend>Osc2</legend>
+					<x-osc id="Osc2"></x-osc>
+				</fieldset>
+
+				<fieldset  class="panel lfo">
+					<legend>
+						LFO 1
+					</legend>
+					<x-osc-lfo id="LFO1"></x-osc-lfo>
+				</fieldset>
+			</div>
 
 
-	</script>
-	<fieldset>
-		<legend>Osc1</legend>
-		<x-osc id="Osc1"></x-osc>
-	</fieldset>
+			<div id="center">
+				<fieldset class="panel filter">
+					<legend>Filter 1</legend>
+					<x-filter id="Filter1"></x-filter>
+				</fieldset>
+
+				<fieldset class="panel filter">
+					<legend>Filter 2</legend>
+					<x-filter id="Filter2"></x-filter>
+				</fieldset>
+
+				<fieldset class="panel lfo">
+					<legend>
+						LFO 2
+					</legend>
+					<x-filter-lfo id="LFO2"></x-filter-lfo>
+				</fieldset>
+			</div>
 
 
-	<fieldset>
-		<legend>Osc2</legend>
-		<x-osc id="Osc2"></x-osc>
-	</fieldset>
+			<div id="right">
+				<fieldset class="panel amp">
+					<legend>
+						Amplifier
+					</legend>
+					<x-amp id="Amp"></x-amp>
+				</fieldset>
+				<fieldset class="panel envelope">
+					<legend>
+						Envelope
+					</legend>
+					<x-envelope id="Envelope"></x-envelope>
+				</fieldset>
 
+				<fieldset class="panel fx">
+					<legend>
+						Delay
+					</legend>
+					<x-delay id="Delay"></x-delay>
+				</fieldset>
 
-	<fieldset>
-		<legend>Filter 1</legend>
-		<x-filter id="Filter1"></x-filter>
-	</fieldset>
-
-
-	<fieldset>
-		<legend>Filter 2</legend>
-		<x-filter id="Filter2"></x-filter>
-	</fieldset>
-
-
-	<fieldset>
-		<legend>
-			Envelope
-		</legend>
-		<x-envelope id="Envelope"></x-envelope>
-	</fieldset>
-
-	<fieldset>
-		<legend>
-			LFO 1
-		</legend>
-		<x-osc-lfo id="LFO1"></x-osc-lfo>
-	</fieldset>
-
-	<fieldset>
-		<legend>
-			LFO 2 - Experimental
-		</legend>
-		<x-filter-lfo id="LFO2"></x-filter-lfo>
-	</fieldset>
-
-	<fieldset>
-		<legend>
-			Delay
-		</legend>
-		<x-delay id="Delay"></x-delay>
-	</fieldset>
-
-	<fieldset>
-		<legend>
-			Amplifier
-		</legend>
-		<x-amp id="Amp"></x-amp>
-	</fieldset>
-</form>
+				<fieldset class="panel analyser">
+					<legend>Analyser</legend>
+				</fieldset>
+			</div>
+		</div>
+	</form>
 </body>
 </html>
