@@ -192,21 +192,29 @@ x-osc-lfo table {
   cursor: pointer;
   color: #fff; }
 
-.factory-settings {
+.btn {
   background: #383735;
   border: 0 none;
   border-radius: 3px;
   margin-top: auto;
-  margin-left: auto;
   margin-right: 5px;
   padding: 0;
-  border: 1px solid #383735; }
-  .factory-settings::before {
+  border: 1px solid #383735;
+  cursor: pointer; }
+  .btn:before {
     font-family: FontAwesome;
-    content: "\f0e2";
     color: #fff;
     display: inline-block;
     padding: 17px; }
+
+.factory-settings {
+  margin-left: auto; }
+
+.factory-settings:before {
+  content: "\f0e2"; }
+
+.download:before {
+  content: "\f063"; }
 
 .custom-file-input:active::before {
   background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9); }

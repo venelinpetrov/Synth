@@ -51,6 +51,7 @@
     //onmidimessage event handler
     function onMIDIMessage(event) {
       console.log(event.data);
+      var t0 = performance.now();
       var status = event.data[0];
       var note = event.data[1];
       var velocity = event.data[2]/255; //normalize: velocity -> gain: [0,255] -> [0,1]
@@ -70,6 +71,8 @@
         delete active_voices[note];
         //voice = null;
       }
+      var t1 = performance.now();
+      console.log("Call to took " + (t1 - t0) + " milliseconds.");
     }
 
     //Initialize synth
