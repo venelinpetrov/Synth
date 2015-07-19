@@ -108,6 +108,29 @@ x-osc-lfo table {
   height: 150px;
 }
 
-.analyser {
+.midiDevices {
   height: 150px;
+
+  ul {
+    margin: 20px 0 0 12px;
+    padding: 0;
+    list-style: none;
+
+    li {
+      position: relative;
+      padding-bottom: 8px;
+    }
+
+    li:before {
+      content: '';
+      position: absolute;
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 100%;
+      left: -12px;
+      top: 3px;
+      background: #22A022;
+    }
+  }
 }

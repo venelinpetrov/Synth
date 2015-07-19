@@ -43,6 +43,8 @@
       var inputs = midiAccess.inputs.values();
       for (var input = inputs.next() ; input && !input.done; input = inputs.next()) {
         input.value.onmidimessage = onMIDIMessage;
+        console.log(input.value.name);
+        document.getElementById('devicesList').innerHTML += '<li>' + input.value.name + ' [Ready]</li>';
       }
     }, function(msg){
       console.log("Failed to get MIDI access - ", msg);
@@ -54,7 +56,7 @@
       var t0 = performance.now();
       var status = event.data[0];
       var note = event.data[1];
-      var velocity = event.data[2]/255; //normalize: velocity -> gain: [0,255] -> [0,1]
+      var velocity = event.data[2];
       var voice;
       if(status !== 144) {
         return; //mod wheel and pitch wheel break the synth - TODO: fix that
@@ -104,6 +106,7 @@
     var params = document.getElementsByClassName('parameter');
     var powers = document.getElementsByClassName('power');
     //extract values from 'parameter'-s and attach event listener to each
+    //use Array.from when it's implemented by Babel
     [].forEach.call(params, function(v){
       v.value = patch.getParameter(v.id); //init value with default patch
       v.addEventListener('input', function (e){

@@ -55,7 +55,7 @@ class Voice {
       vco1 = new Oscillator(this.ctx);
       //vco1Envelope = new Envelope(this.ctx);
       vco1.setType(patch.getParameter('Osc1_wave'));
-      vco1.setGain(patch.getParameter('Osc1_gain') * velocity);
+      vco1.setGain(patch.getParameter('Osc1_gain') * velocity / 127); //normalize: velocity -> gain : [0,127] -> [0,1]
       vco1.setFrequency(equalTempered440[this.note]);
       vco1.setPitch(+patch.getParameter('Osc1_pitch'));
 
