@@ -1,3 +1,0 @@
-Import/Export Patches (settings)
-
-Implement Patch class which can store synth's current state and import export settings in JSON

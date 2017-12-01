@@ -1,3 +1,0 @@
-[REFACTORING]
-- Implement with JS modules
-- every component in separate file and included in one single file which is then transpiled

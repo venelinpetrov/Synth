@@ -1,3 +1,0 @@
-10. Final prototype
-	- all functionalities working together
-	- layout and appearance

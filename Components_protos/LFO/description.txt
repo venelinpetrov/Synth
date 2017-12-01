@@ -1,4 +1,0 @@
-6.	LFO + Research
-	- Form (sine, triangle, etc.)
-	- Rate
-

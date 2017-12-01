@@ -1,3 +1,0 @@
-3.	Envelopes (AR/ADSR)
-	- AR
-	- ADSR (optional)

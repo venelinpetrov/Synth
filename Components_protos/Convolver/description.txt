@@ -1,6 +1,0 @@
-1.	Implement fully functional oscillator 
--	On/off
--	Pitch
--	Wave type
--	Amp	
--	MIDI Keyboard Controller support

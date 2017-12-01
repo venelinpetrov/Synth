@@ -2,14 +2,90 @@
 
 <html>
 <head>
-	<title>synth2</title>
-	<script src="Scripts/script-compiled.js"></script>
+	<title>Fourier</title>
+	<script src="dist/all.js"></script>
+
+	<link rel="stylesheet" href="src/styles/styles.css">
 </head>
-
 <body>
-	<div id="Osc1">
-		<div id="Osc1_gain"></div>
-	</div>
+	<form>
+		<div id="header">
 
+			<h2><img src="images/logo.png" alt="logo" width="260"/></h2>
+			<!-- <a href="volta synth - trance patch.json" download="fourier.json" style="color:red;">Download</a> -->
+			<button type="submit" value=""  class="btn factory-settings"></button>
+			<a href="volta synth - trance patch.json" class="btn download" download="some name"></a>
+			<input type="file" id="upload" class="custom-file-input">
+		</div>
+
+		<div id="main">
+			<div id="left">
+				<fieldset class="panel osc">
+					<legend>Osc1</legend>
+					<x-osc id="Osc1"></x-osc>
+				</fieldset>
+
+				<fieldset class="panel osc">
+					<legend>Osc2</legend>
+					<x-osc id="Osc2"></x-osc>
+				</fieldset>
+
+				<fieldset  class="panel lfo">
+					<legend>
+						LFO 1
+					</legend>
+					<x-osc-lfo id="LFO1"></x-osc-lfo>
+				</fieldset>
+			</div>
+
+
+			<div id="center">
+				<fieldset class="panel filter">
+					<legend>Filter 1</legend>
+					<x-filter id="Filter1"></x-filter>
+				</fieldset>
+
+				<fieldset class="panel filter">
+					<legend>Filter 2</legend>
+					<x-filter id="Filter2"></x-filter>
+				</fieldset>
+
+				<fieldset class="panel lfo">
+					<legend>
+						LFO 2
+					</legend>
+					<x-filter-lfo id="LFO2"></x-filter-lfo>
+				</fieldset>
+			</div>
+
+
+			<div id="right">
+				<fieldset class="panel amp">
+					<legend>
+						Amplifier
+					</legend>
+					<x-amp id="Amp"></x-amp>
+				</fieldset>
+				<fieldset class="panel envelope">
+					<legend>
+						Envelope
+					</legend>
+					<x-envelope id="Envelope"></x-envelope>
+				</fieldset>
+
+				<fieldset class="panel fx">
+					<legend>
+						Delay
+					</legend>
+					<x-delay id="Delay"></x-delay>
+				</fieldset>
+
+				<fieldset class="panel midiDevices">
+					<legend>MIDI Devices</legend>
+					<ul id="devicesList"></ul>
+				</fieldset>
+			</div>
+		</div>
+	</form>
 </body>
 </html>

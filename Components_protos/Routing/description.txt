@@ -1,4 +1,0 @@
-9. All components together
-	- dynamic routing
-		* on/off (bypass) components
-		* filter series-parallel routing (optional but very recommanded)
