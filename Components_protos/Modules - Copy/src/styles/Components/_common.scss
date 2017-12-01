@@ -1,0 +1,136 @@
+//Common styles like general background, fonts, etc go here
+
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../../fonts/fontawesome-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+body {
+  font: normal 12px Verdana;
+}
+
+form {
+  width: 1280px;
+  margin: 0 auto;
+}
+br {
+  font-size: 20px;
+}
+input {
+  vertical-align: middle;
+}
+#main {
+  display: flex;
+}
+
+
+#left,
+#center,
+#right {
+  flex-direction: row;
+  flex: 1;
+}
+
+.panel {
+  position: relative;
+  margin-bottom: 5px;
+  padding: 28px;
+  box-sizing: border-box;
+  border: 2px solid #383735;
+  border-radius: 6px;
+  background: #dfd6d1;
+
+  legend {
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    background: #383735;
+    color: white;
+    border-radius: 5px 0;
+    padding: 3px 10px;
+  }
+}
+
+.osc,
+.filter {
+  height: 180px;
+}
+x-osc label,
+x-osc-lfo label,
+x-filter-lfo label,
+x-filter label,
+x-envelope label,
+x-delay label,
+x-amp label{
+  width: 90px;
+  display: inline-block;
+}
+
+[type="number"],
+select {
+  width: 80px;
+  background: #383735;
+  color: #fff;
+  border: 0 none;
+  border-radius: 3px;
+  padding: 3px;
+  box-sizing: border-box;
+}
+.amp {
+  height: 105px;
+}
+x-osc-lfo table {
+  margin-top: 20px;
+}
+.lfo {
+  height: 230px;
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  table td,
+  table th {
+    border: 1px dotted #333;
+    margin: 0;
+    border-collapse: collapse;
+    text-align: left;
+  }
+}
+
+.envelope {
+  height: 180px;
+}
+
+.fx {
+  height: 150px;
+}
+
+.midiDevices {
+  height: 150px;
+
+  ul {
+    margin: 20px 0 0 12px;
+    padding: 0;
+    list-style: none;
+
+    li {
+      position: relative;
+      padding-bottom: 8px;
+    }
+
+    li:before {
+      content: '';
+      position: absolute;
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 100%;
+      left: -12px;
+      top: 3px;
+      background: #22A022;
+    }
+  }
+}

@@ -51,9 +51,6 @@ class Delay {
         this.inputGain.connect(this.dryGain);
         this.inputGain.connect(this.wetGain);
       }
-    } catch (e) {
-      //console.log('delay bypass-->', e);
-    }
-
+    } catch (e) {}
   }
 }
